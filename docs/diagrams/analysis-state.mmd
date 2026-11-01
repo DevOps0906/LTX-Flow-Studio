@@ -1,0 +1,15 @@
+stateDiagram-v2
+  [*] --> queued
+  queued --> running
+  state running {
+    [*] --> download
+    download --> scenes
+    scenes --> transcript
+    transcript --> describe
+    describe --> draft
+    draft --> [*]
+  }
+  running --> done
+  running --> failed: 단계 오류 / interrupted
+  done --> [*]
+  failed --> [*]

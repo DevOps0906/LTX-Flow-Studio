@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>생성 진행 상태 — 시안 v2</title>
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="shell.css">
+<style>
+  .layout { display: grid; gap: calc(var(--spacing) * 4); }
+  .hero { display: grid; gap: calc(var(--spacing) * 5); }
+  .count { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: var(--text-display); font-weight: 700; line-height: 1; }
+  .count small { font-size: var(--text-h2); color: var(--color-text-muted); margin-left: var(--spacing); }
+  .count-row { display: flex; align-items: end; justify-content: space-between; gap: calc(var(--spacing) * 3); flex-wrap: wrap; }
+  .bar.lg { height: calc(var(--spacing) * 3); }
+  .steps-box { position: relative; }
+  .steps { list-style: none; margin: 0; padding: 0; position: relative; display: grid; grid-template-columns: repeat(5, 1fr); }
+  .steps-track, .steps-fill { position: absolute; top: calc(var(--spacing) * 4 - var(--border-width)); left: 10%; height: calc(var(--border-width) * 2); border-radius: var(--radius-pill); }
+  .steps-track { right: 10%; background: var(--color-border); }
+  .steps-fill { width: 0; background: var(--color-accent); }
+  .step { position: relative; display: grid; justify-items: center; gap: calc(var(--spacing) * 2); text-align: center; }
+  .dot { display: grid; place-items: center; width: calc(var(--spacing) * 8); height: calc(var(--spacing) * 8); border-radius: 50%; background: var(--color-surface); border: calc(var(--border-width) * 2) solid var(--color-input); color: var(--color-text-muted); font-family: var(--font-mono); font-size: var(--text-caption); font-weight: 700; }
+  .step.done .dot { background: var(--color-accent); border-color: var(--color-accent); color: var(--color-on-accent); }
+  .step.active .dot { border-color: var(--color-accent); color: var(--color-accent-text); box-shadow: var(--shadow-glow); }
+  .step .name { font-size: var(--text-caption); color: var(--color-text-muted); line-height: 1.3; }
+  .step.done .name, .step.active .name { color: var(--color-text); font-weight: 600; }
+  .log { list-style: none; margin: 0; padding: 0; display: grid; gap: calc(var(--spacing) * 2); font-size: var(--text-caption); }
+  .log li { display: grid; grid-template-columns: auto 1fr auto; gap: calc(var(--spacing) * 3); align-items: center; padding: calc(var(--spacing) * 2) 0; border-bottom: var(--border-width) solid var(--color-border); }
+  .log li:last-child { border-bottom: 0; }
+  @media (width >= 1200px) { .layout { grid-template-columns: 8fr 4fr; align-items: start; } }
+</style>
+</head>
+<body data-page="progress">
+<main class="main" id="main">
+  <div class="page-head">
+    <div><h1>생성 진행 상태</h1><p>벤치마킹 생성 · 잡 <span class="mono">job_8f2c</span> · 2026-11-01 21:30 시작</p></div>
+    <div class="row"><button class="btn" type="button" id="replay">애니메이션 다시 보기</button><button class="btn" type="button" id="next">다음 단계 (시안)</button></div>
+  </div>
+
+  <div class="layout">
+    <section class="card hero" aria-labelledby="pg-h">
+      <div class="card-head"><h2 id="pg-h">영상을 만드는 중입니다</h2><span class="badge badge-accent" id="stage-badge">4/5 · 생성</span></div>
+      <div class="steps-box">
+      <span class="steps-track" aria-hidden="true"></span><span class="steps-fill" aria-hidden="true"></span>
+      <ol class="steps" aria-label="진행 단계">        <li class="step"><span class="dot">1</span><span class="name">다운로드</span><span class="sr-only state"></span></li>
+        <li class="step"><span class="dot">2</span><span class="name">장면 분석</span><span class="sr-only state"></span></li>
+        <li class="step"><span class="dot">3</span><span class="name">프롬프트</span><span class="sr-only state"></span></li>
+        <li class="step"><span class="dot">4</span><span class="name">생성</span><span class="sr-only state"></span></li>
+        <li class="step"><span class="dot">5</span><span class="name">병합</span><span class="sr-only state"></span></li>
+      </ol>
+      </div>
+      <div class="count-row">
+        <div><span class="count"><span id="pct">64</span><small>%</small></span></div>
+        <p class="caption muted" id="msg" aria-live="polite">장면 03 / 04 생성 중 · 남은 시간 약 2분 10초</p>
+      </div>
+      <div class="bar lg" role="progressbar" id="bar" aria-label="전체 진행률" aria-valuemin="0" aria-valuemax="100" aria-valuenow="64"><i id="fill" style="width:64%"></i></div>
+      <div class="row row-end"><button class="btn btn-danger" type="button">생성 취소</button><a class="btn" href="studio.html">스튜디오로 돌아가기</a></div>
+    </section>
+
+    <div class="stack">
+      <section class="card" aria-labelledby="job-h">
+        <h2 id="job-h">작업 정보</h2>
+        <dl class="meta">
+          <dt>참고 영상</dt><dd class="mono">youtu.be/dQw4w9WgXcQ</dd>
+          <dt>분석 방식</dt><dd>로컬 분석 (GPU)</dd>
+          <dt>제작 방식</dt><dd>B 캡처 이미지 → 영상</dd>
+          <dt>엔진 · 길이</dt><dd>LTX-Distilled · 20초</dd>
+          <dt>GPU</dt><dd class="mono">RTX 3060 · 7.1 / 12 GB</dd>
+        </dl>
+      </section>
+      <section class="card" aria-labelledby="log-h">
+        <h2 id="log-h">단계 기록</h2>
+        <ol class="log">
+          <li><span class="badge badge-success">완료</span><span>다운로드</span><span class="mono muted">0:08</span></li>
+          <li><span class="badge badge-success">완료</span><span>장면 분석 · 6개 장면</span><span class="mono muted">0:41</span></li>
+          <li><span class="badge badge-success">완료</span><span>프롬프트 작성</span><span class="mono muted">0:05</span></li>
+          <li><span class="badge badge-accent">진행</span><span>생성 · 장면 03 / 04</span><span class="mono muted">1:52</span></li>
+          <li><span class="badge">대기</span><span>병합</span><span class="mono muted">—</span></li>
+        </ol>
+      </section>
+    </div>
+  </div>
+</main>
+<!-- GSAP 3.13.0 (cdnjs, 버전 고정). 버전·라이선스는 DESIGN.md '확인 필요'. 로드 실패 시 즉시 갱신으로 대체 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js"></script>
+<script src="shell.js"></script>
+<script>
+(function () {
+  const NAMES = ['다운로드', '장면 분석', '프롬프트', '생성', '병합'];
+  const STATES = [ // [활성 단계 index, 전체 %, 메시지]
+    [0, 6, '참고 영상 내려받는 중'],
+    [1, 22, '장면 경계와 대표 프레임 찾는 중'],
+    [2, 38, '장면별 프롬프트 작성 중'],
+    [3, 64, '장면 03 / 04 생성 중 · 남은 시간 약 2분 10초'],
+    [4, 92, '장면 이어 붙이는 중'],
+    [5, 100, '완료 — 갤러리에 저장했습니다'],
+  ];
+  let cur = 3;
+  const steps = [...document.querySelectorAll('.step')];
+  const pct = document.getElementById('pct'), fill = document.getElementById('fill');
+  const bar = document.getElementById('bar'), msg = document.getElementById('msg');
+  const track = document.querySelector('.steps-fill'), badge = document.getElementById('stage-badge');
+  // 애니메이션을 끄는 조건: 사용자 설정 · 자동 캡처(shot, 헤드리스) · GSAP 로드 실패
+  const still = () => matchMedia('(prefers-reduced-motion: reduce)').matches || navigator.webdriver || /HeadlessChrome/.test(navigator.userAgent) || !window.gsap;
+  const dur = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--motion-progress')) || 0;
+
+  function render(i, from) {
+    const [active, p, text] = STATES[i];
+    steps.forEach((s, k) => {
+      s.classList.toggle('done', k < active); s.classList.toggle('active', k === active);
+      s.querySelector('.state').textContent = k < active ? ' 완료' : k === active ? ' 진행 중' : ' 대기';
+      if (k === active) s.setAttribute('aria-current', 'step'); else s.removeAttribute('aria-current');
+    });
+    const line = Math.min(active, 4) / 4 * 80 + '%';
+    msg.textContent = text;
+    badge.textContent = active < 5 ? `${active + 1}/5 · ${NAMES[active]}` : '5/5 · 완료';
+    bar.setAttribute('aria-valuenow', p);
+    if (still()) { pct.textContent = p; fill.style.width = p + '%'; track.style.width = line; return; }
+    const n = { v: from };
+    gsap.timeline()
+      .to(fill, { width: p + '%', duration: dur * 2, ease: 'power2.out' }, 0)
+      .to(track, { width: line, duration: dur * 1.5, ease: 'power2.inOut' }, 0)
+      .to(n, { v: p, duration: dur * 2, ease: 'power2.out', onUpdate: () => { pct.textContent = Math.round(n.v); } }, 0)
+      .fromTo(steps[Math.min(active, 4)].querySelector('.dot'), { scale: 0.7 }, { scale: 1, duration: dur, ease: 'back.out(3)' }, dur);
+  }
+  document.getElementById('replay').addEventListener('click', () => { if (!still()) { gsap.set(fill, { width: 0 }); gsap.set(track, { width: 0 }); } render(cur, 0); });
+  document.getElementById('next').addEventListener('click', () => { const prev = STATES[cur][1]; cur = (cur + 1) % STATES.length; render(cur, cur ? prev : 0); });
+  if (!still()) { fill.style.width = '0'; }
+  render(cur, 0);
+})();
+</script>
+</body>
+</html>

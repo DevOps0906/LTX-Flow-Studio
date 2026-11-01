@@ -1,0 +1,18 @@
+flowchart LR
+  url["S-03 유튜브 URL"] --> val["A-07 URL 검증<br/>허용 목록 + 정규 URL 재구성"]
+  val -->|거부| err["400 invalid_url / host_not_allowed"]
+  val --> create["A-08 분석 잡 생성"]
+  create --> dl["download<br/>yt-dlp 인자 고정"]
+  dl --> sc["scenes<br/>ffmpeg 장면 감지 · 대표 프레임"]
+  sc --> tr["transcript<br/>자막 우선 · 없으면 Whisper(GPU)"]
+  tr --> mode{"analysis_mode"}
+  mode -->|local| ld["describe · draft<br/>로컬 비전모델(GPU, LTX와 순차)"]
+  mode -->|claude| cd["describe · draft<br/>Claude API(서버 전용 키)"]
+  ld --> res["Analysis done<br/>장면 카드 · 프롬프트 초안"]
+  cd --> res
+  res --> s04["S-04 초안 편집 · 제작 방식 선택"]
+  s04 --> mk{"make_mode"}
+  mk -->|t2v 방식 A| t2v["스테이지 1 텍스트→영상"]
+  mk -->|i2v 방식 B| i2v["스테이지 1 장면 이미지→영상"]
+  t2v --> out["S-05 원본·생성 비교"]
+  i2v --> out

@@ -1,0 +1,329 @@
+{
+ "version": "1",
+ "generated": "2026-11-01T12:30:48+00:00",
+ "docs": "docs",
+ "tokens": ".\\apps\\web\\src\\styles\\tokens.css",
+ "sources": {
+  "docs/03_SCREENS_UX.md": "1102fbde9f46",
+  "docs/04_API.md": "e70e1f7c82cb"
+ },
+ "changed": [
+  "S-01",
+  "S-02"
+ ],
+ "removed": [],
+ "screens": {
+  "S-01": {
+   "id": "S-01",
+   "name": "생성 스튜디오",
+   "type_raw": "폼",
+   "route": "/dashboard",
+   "purpose": "설정을 고르고 영상 생성 시작",
+   "blocks": [
+    {
+     "type": "header",
+     "label": "",
+     "items": []
+    },
+    {
+     "type": "stat",
+     "label": "GPU명·VRAM 사용량·대기 잡 수",
+     "items": [
+      "GPU명",
+      "VRAM 사용량",
+      "대기 잡 수"
+     ]
+    },
+    {
+     "type": "form",
+     "label": "긍정 프롬프트*·부정 프롬프트·마케팅 태그·길이(15/20/30초)·비율(9:16/16:9)·해상도(720p/1080p)·엔진(Distilled/Dev)",
+     "items": [
+      "긍정 프롬프트*",
+      "부정 프롬프트",
+      "마케팅 태그",
+      "길이(15",
+      "20",
+      "30초)",
+      "비율(9:16",
+      "16:9)",
+      "해상도(720p",
+      "1080p)",
+      "엔진(Distilled",
+      "Dev)"
+     ]
+    },
+    {
+     "type": "button",
+     "label": "영상 생성하기",
+     "items": [
+      "영상 생성하기"
+     ]
+    },
+    {
+     "type": "link",
+     "label": "최근 생성 보기",
+     "items": [
+      "최근 생성 보기"
+     ]
+    },
+    {
+     "type": "list",
+     "label": "최근 생성 갤러리 카드(길이·비율·상태)",
+     "items": [
+      "최근 생성 갤러리 카드(길이",
+      "비율",
+      "상태)"
+     ]
+    }
+   ],
+   "data": [
+    "jobs",
+    "gpu"
+   ],
+   "api": [
+    "A-01",
+    "A-02",
+    "A-06"
+   ],
+   "role": "로컬 전용",
+   "next": [
+    "S-02"
+   ],
+   "states_combined": "",
+   "source": "docs/03_SCREENS_UX.md",
+   "type": "form",
+   "must_missing": [],
+   "should_missing": [
+    "임시 저장(긴 폼)"
+   ],
+   "states_missing": [],
+   "hash": "55744678200a",
+   "wireframe": "design/wireframes/S-01.html"
+  },
+  "S-02": {
+   "id": "S-02",
+   "name": "생성 결과",
+   "type_raw": "상세",
+   "route": "/dashboard?job={id}",
+   "purpose": "진행률을 보고 결과를 재생·저장",
+   "blocks": [
+    {
+     "type": "header",
+     "label": "상태 배지",
+     "items": [
+      "상태 배지"
+     ]
+    },
+    {
+     "type": "text",
+     "label": "진행률·단계 메시지·세그먼트 n/N",
+     "items": [
+      "진행률",
+      "단계 메시지",
+      "세그먼트 n",
+      "N"
+     ]
+    },
+    {
+     "type": "card",
+     "label": "비디오 플레이어(반복·전체화면)",
+     "items": [
+      "비디오 플레이어(반복",
+      "전체화면)"
+     ]
+    },
+    {
+     "type": "text",
+     "label": "해상도·비율·길이",
+     "items": [
+      "해상도",
+      "비율",
+      "길이"
+     ]
+    },
+    {
+     "type": "button",
+     "label": "MP4 다운로드",
+     "items": [
+      "MP4 다운로드"
+     ]
+    },
+    {
+     "type": "button",
+     "label": "프롬프트 복사",
+     "items": [
+      "프롬프트 복사"
+     ]
+    },
+    {
+     "type": "button",
+     "label": "재생성",
+     "items": [
+      "재생성"
+     ]
+    }
+   ],
+   "data": [
+    "jobs"
+   ],
+   "api": [
+    "A-03",
+    "A-04",
+    "A-05",
+    "A-01"
+   ],
+   "role": "로컬 전용",
+   "next": [
+    "S-01",
+    "S-02"
+   ],
+   "states_combined": "",
+   "source": "docs/03_SCREENS_UX.md",
+   "type": "detail",
+   "must_missing": [],
+   "should_missing": [
+    "관련 항목 탭",
+    "활동·변경 이력"
+   ],
+   "states_missing": [],
+   "hash": "4cf86951ae5d",
+   "wireframe": "design/wireframes/S-02.html"
+  }
+ },
+ "states": {
+  "S-01": {
+   "빈": "갤러리: \"아직 만든 영상이 없습니다\" + 프롬프트 입력 유도",
+   "로딩": "GPU 상태·갤러리 스켈레톤",
+   "오류": "API 연결 실패 안내 + 다시 시도 · GPU 미검출(503)이면 생성 버튼 비활성 · 400 필드 오류 표시",
+   "성공": "잡 생성 → S-02 표시"
+  },
+  "S-02": {
+   "빈": "—",
+   "로딩": "queued`: 대기 순번 · `running_*`: 진행률 바 + 단계 메시지",
+   "오류": "failed`: 오류 코드별 한국어 사유 + 재생성 버튼 · 404: 없는 영상 안내 + S-01",
+   "성공": "done`: 플레이어 자동 재생"
+  }
+ },
+ "flows": {
+  "F-01": {
+   "id": "F-01",
+   "name": "영상 생성",
+   "steps": [
+    "S-01",
+    "S-02"
+   ],
+   "source": "docs/03_SCREENS_UX.md"
+  },
+  "F-02": {
+   "id": "F-02",
+   "name": "갤러리 다시 보기",
+   "steps": [
+    "S-01",
+    "S-02"
+   ],
+   "source": "docs/03_SCREENS_UX.md"
+  },
+  "F-03": {
+   "id": "F-03",
+   "name": "재생성(같은 설정 새 잡)",
+   "steps": [
+    "S-02",
+    "S-02"
+   ],
+   "source": "docs/03_SCREENS_UX.md"
+  }
+ },
+ "apis": {
+  "A-01": {
+   "id": "A-01",
+   "method": "POST /api/jobs",
+   "path": "",
+   "row": {
+    "ID": "A-01",
+    "메서드·경로": "POST /api/jobs",
+    "입력": "JobCreate(`#2`)",
+    "출력": "201 Job",
+    "오류": "400 검증 · 409 `stage2_unavailable`(stages에 2인데 ComfyUI 없음) · 429 `queue_full`(대기 상한 초과, `#2` 상한)"
+   },
+   "source": "docs/04_API.md"
+  },
+  "A-02": {
+   "id": "A-02",
+   "method": "GET /api/jobs",
+   "path": "",
+   "row": {
+    "ID": "A-02",
+    "메서드·경로": "GET /api/jobs",
+    "입력": "?limit=`(기본·최대 50) · `?before=`(created_at 커서)",
+    "출력": "200 `{items: Job[], next_before}` 최신순",
+    "오류": "400"
+   },
+   "source": "docs/04_API.md"
+  },
+  "A-03": {
+   "id": "A-03",
+   "method": "GET /api/jobs/{id}",
+   "path": "",
+   "row": {
+    "ID": "A-03",
+    "메서드·경로": "GET /api/jobs/{id}",
+    "입력": "path `id`(UUID)",
+    "출력": "200 Job",
+    "오류": "404"
+   },
+   "source": "docs/04_API.md"
+  },
+  "A-04": {
+   "id": "A-04",
+   "method": "GET /api/jobs/{id}/events` (SSE)",
+   "path": "",
+   "row": {
+    "ID": "A-04",
+    "메서드·경로": "GET /api/jobs/{id}/events` (SSE)",
+    "입력": "path `id",
+    "출력": "text/event-stream`, 이벤트 `#3`. 연결 시 현재 상태 1회 즉시 전송",
+    "오류": "404"
+   },
+   "source": "docs/04_API.md"
+  },
+  "A-05": {
+   "id": "A-05",
+   "method": "GET /api/files/{id}.mp4",
+   "path": "",
+   "row": {
+    "ID": "A-05",
+    "메서드·경로": "GET /api/files/{id}.mp4",
+    "입력": "path `id`(UUID만)",
+    "출력": "200 `video/mp4`, Range 지원, `?download=1`이면 `Content-Disposition: attachment",
+    "오류": "404(없음·미완료)"
+   },
+   "source": "docs/04_API.md"
+  },
+  "A-06": {
+   "id": "A-06",
+   "method": "GET /api/gpu",
+   "path": "",
+   "row": {
+    "ID": "A-06",
+    "메서드·경로": "GET /api/gpu",
+    "입력": "—",
+    "출력": "200 GpuStatus(`#2`)",
+    "오류": "503 GPU 미검출"
+   },
+   "source": "docs/04_API.md"
+  }
+ },
+ "tables": {},
+ "issues": [
+  [
+   "🟡",
+   "S-01",
+   "생성 스튜디오 권장: 임시 저장(긴 폼)"
+  ],
+  [
+   "🟡",
+   "S-02",
+   "생성 결과 권장: 관련 항목 탭, 활동·변경 이력"
+  ]
+ ]
+}

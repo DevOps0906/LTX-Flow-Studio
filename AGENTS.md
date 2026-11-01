@@ -36,7 +36,7 @@
 ## 5. 문서 지도 (필요한 장만 읽는다)
 | 문서 | 내용 |
 |---|---|
-| `docs/adr/ADR-*.md` | 결정 기록(GPU 세그먼트·2방식 백엔드) |
+| `docs/adr/ADR-*.md` | 결정 기록(GPU 세그먼트·2방식 백엔드·분석 방식·제작 방식 A/B) |
 | `docs/01_PRD.md` ~ `06_SDLC.md` | 기획 · 구조(데이터 모델 포함) · 화면 · API · 단계 계약 · 개발 생애주기 |
 | `docs/diagrams/*.mmd` | 구조도 · 흐름도 · ERD (Mermaid) |
 | `DESIGN.md` · `apps/web/src/styles/tokens.css` | 디자인 (정답은 토큰 파일) |

@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>설정 — 시안 v2</title>
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="shell.css">
+<style>
+  dl.meta.states dd { text-align: left; }
+  .grid { display: grid; gap: calc(var(--spacing) * 4); }
+  .key-row { display: grid; gap: calc(var(--spacing) * 2); }
+  .saved { display: flex; align-items: center; gap: calc(var(--spacing) * 2); flex-wrap: wrap; }
+  .result { display: flex; gap: calc(var(--spacing) * 2); align-items: center; flex-wrap: wrap; font-size: var(--text-caption); }
+  @media (width >= 768px) { .key-row { grid-template-columns: 1fr auto; align-items: end; } }
+  @media (width >= 1200px) { .grid { grid-template-columns: 1fr 1fr; align-items: start; } .grid .wide { grid-column: span 2; } }
+</style>
+</head>
+<body data-page="settings">
+<main class="main" id="main">
+  <div class="page-head">
+    <div><h1>설정</h1><p>분석 방식 기본값과 Claude API 연결을 관리합니다.</p></div>
+  </div>
+
+  <div class="grid">
+    <section class="card" aria-labelledby="an-h">
+      <h2 id="an-h">분석 방식 기본값</h2>
+      <fieldset class="seg">
+        <legend>벤치마킹 생성에서 처음 선택될 방식</legend>
+        <label class="opt"><input type="radio" name="def" checked><span><b>로컬 분석</b><small>GPU에서 실행 · 비용 없음</small></span></label>
+        <label class="opt"><input type="radio" name="def"><span><b>Claude API</b><small>장면 설명이 정확 · 호출당 과금</small></span></label>
+      </fieldset>
+      <p class="hint">스튜디오 화면에서 작업마다 바꿀 수 있습니다. Claude API는 키가 저장돼 있어야 선택됩니다.</p>
+      <div class="row row-end"><button class="btn btn-primary" type="button">기본값 저장</button></div>
+    </section>
+
+    <section class="card" aria-labelledby="key-h">
+      <div class="card-head"><h2 id="key-h">Claude API 키</h2>
+        <span class="saved"><span class="badge badge-success" role="status">저장됨</span><span class="caption muted">2026-10-30 저장</span></span></div>
+      <div class="key-row">
+        <div class="field">
+          <label for="key">새 키로 교체 (저장된 키는 다시 표시하지 않습니다)</label>
+          <input class="input mono" id="key" type="password" autocomplete="off" spellcheck="false" placeholder="sk-ant-… 입력 시 가려서 표시" aria-describedby="key-hint">
+        </div>
+        <button class="btn btn-primary" type="button">저장</button>
+      </div>
+      <p class="hint" id="key-hint">저장하면 입력칸은 비워지고 ‘저장됨’만 표시됩니다.</p>
+      <div class="row">
+        <button class="btn" type="button">연결 테스트</button>
+        <button class="btn btn-danger" type="button">키 삭제</button>
+      </div>
+      <p class="result" role="status"><span class="badge badge-success">연결 성공</span><span class="muted mono">응답 412 ms · 21:28 확인</span></p>
+      <div class="note"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+        <p>키는 <b>서버에만</b> 저장되고 브라우저로 다시 보내지 않습니다. 연결 테스트와 분석 호출도 서버에서 실행합니다. 화면·로그·URL에 키가 나타나지 않습니다.</p></div>
+    </section>
+
+    <section class="card wide" aria-labelledby="st-h">
+      <h2 id="st-h">키 상태별 표시 (시안 참고)</h2>
+      <dl class="meta states">
+        <dt>키 없음</dt><dd><span class="badge">미설정</span> · Claude API 선택 불가</dd>
+        <dt>저장됨</dt><dd><span class="badge badge-success">저장됨</span> · 입력칸 비움, 값 재표시 없음</dd>
+        <dt>테스트 실패</dt><dd><span class="badge badge-danger">연결 실패</span> · 401 키 확인 / 네트워크 오류 안내</dd>
+      </dl>
+    </section>
+  </div>
+</main>
+<script src="shell.js"></script>
+</body>
+</html>

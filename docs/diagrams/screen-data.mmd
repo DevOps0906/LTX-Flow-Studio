@@ -1,0 +1,27 @@
+flowchart LR
+  subgraph SC["화면"]
+    n_S_01["S-01 생성 스튜디오"]
+    n_S_02["S-02 생성 결과"]
+  end
+  subgraph AP["API"]
+    n_api_A_01["A-01 POST /api/jobs"]
+    n_api_A_02["A-02 GET /api/jobs"]
+    n_api_A_03["A-03 GET /api/jobs/{id}"]
+    n_api_A_04["A-04 GET /api/jobs/{id}/events` (SSE)"]
+    n_api_A_05["A-05 GET /api/files/{id}.mp4"]
+    n_api_A_06["A-06 GET /api/gpu"]
+  end
+  subgraph DB["데이터"]
+    n_t_gpu[("gpu")]
+    n_t_jobs[("jobs")]
+  end
+  n_S_01 --> n_api_A_01
+  n_S_01 --> n_api_A_02
+  n_S_01 --> n_api_A_06
+  n_S_01 -.-> n_t_jobs
+  n_S_01 -.-> n_t_gpu
+  n_S_02 --> n_api_A_03
+  n_S_02 --> n_api_A_04
+  n_S_02 --> n_api_A_05
+  n_S_02 --> n_api_A_01
+  n_S_02 -.-> n_t_jobs

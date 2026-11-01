@@ -1,4 +1,4 @@
-# 05 STAGES — 스테이지 1(생성) · 스테이지 2(고해상도)
+# 05 STAGES — 스테이지 1(생성) · 스테이지 2(고해상도) · 분석(벤치마킹)
 
 > "스테이지"는 사용자 처리 단계다. 원본 §6의 개발 로드맵 Phase P1~P3와 다르다(`01_PRD.md#3` 용어 표).
 
@@ -32,9 +32,32 @@
 | 워크플로 | 업스케일/LTX 노드 구성·워크플로 JSON은 **확인 필요**(추측 금지) |
 | 비가용 | `available()=false`면 `GET /api/gpu`의 `stage2_available=false`, 웹은 1080p 비활성 |
 
-후보 폐기 (사용하지 않음 — 2026-11-01 기록)
+ComfyUI 후보 폐기 (사용하지 않음 — 2026-11-01 기록)
 | # | 경로 | 버전 |
 |---|---|---|
 | a | `D:\WorkSpace\언리얼_모음\Data\ComfyUI_windows_portable_nvidia\ComfyUI_windows_portable\ComfyUI` | v0.31.0 portable |
 | b | `C:\Users\skydy\Downloads\ComfyUI_windows_portable_nvidia (1)\...` | v0.32.0 portable |
 | c | Comfy Desktop 설치형 | v0.26.0 |
+
+## 4. 분석 — 벤치마킹 생성의 앞 단계 (별도 분석 잡, 스테이지 아님 · 근거 `adr/ADR-003-analysis-local-vs-claude.md`)
+| step | 로컬(`analysis_mode=local`) | Claude(`analysis_mode=claude`) | 확인 필요 |
+|---|---|---|---|
+| 1 `download` | yt-dlp, 정규 URL 하나·인자 고정(`04_API.md#6`) → `data/sources/<id>/source.mp4` | 같음 | 포맷 선택값·크기 상한(Q16) |
+| 2 `scenes` | ffmpeg 장면 감지 또는 PySceneDetect → 장면 구간 + 대표 프레임 `frames/NNN.jpg` | 같음 | 임계값·장면 수 상한(Q16) |
+| 3 `transcript` | yt-dlp 자막 우선, 없으면 로컬 Whisper(GPU) | 같음(로컬). Claude API 오디오 입력 지원은 **미확인**이라 쓰지 않음 | Whisper 구현체·모델 크기·VRAM |
+| 4 `describe` | 로컬 소형 비전모델 장면 캡션(GPU) | 프레임·자막을 Claude에 전송 → 캡션 | 비전모델 후보·VRAM / Claude 모델·이미지 수·크기 상한 |
+| 5 `draft` | 캡션·자막 → 프롬프트 초안(로컬, 방법 task-018에서 확정) | Claude 응답에서 초안 | 초안 형식(긍정·부정) |
+| 규칙 | GPU 단계(3·4)는 LTX와 **순차** — 같은 GPU 잠금, 단계 끝에 모델 해제 | GPU는 3(Whisper)만 | 큐 공유 Q15 |
+- 결과: Analysis(`04_API.md#2`) — 장면 카드·`prompt_draft`. 사용자가 S-04에서 초안을 고친 값이 JobCreate `prompt`가 된다(분석은 생성 잡을 자동 시작하지 않음).
+- 실패: 단계별 오류 코드(`04_API.md#3` 분석 표). 원본 사본은 Q13 규칙대로 정리.
+
+## 5. 제작 방식 A/B — 스테이지 1 입력 차이 (근거 `adr/ADR-004-make-mode-a-b.md`)
+| 항목 | 방식 A `make_mode=t2v` | 방식 B `make_mode=i2v` |
+|---|---|---|
+| 입력 | `prompt`(초안 편집본) | `prompt` + 장면 대표 프레임(`keyframe_ids`) → 세그먼트 시작 프레임 |
+| 엔진 | 기존 스테이지 1 그대로(`#2`) | LTX image-to-video — diffusers 파이프라인 존재·distilled/dev 호환·조건 이미지 해상도·강도 파라미터 **확인 필요**(task-015) |
+| 세그먼트 | `#2`와 같음 | 세그먼트 수·연결은 `#2`와 같음. 세그먼트↔프레임 매핑 Q18(권고: 세그먼트마다 선택 장면 1장) |
+| 프레임 전처리 | — | 720p 비율에 맞춰 자르기/여백(방법 확인 필요) |
+| 스테이지 2 | 같음 | 같음 |
+| 위험 | — | 결과 첫 프레임이 원본 장면과 같을 수 있음(저작권, Q12) · 원본 사본 삭제 시 `keyframe_missing` |
+

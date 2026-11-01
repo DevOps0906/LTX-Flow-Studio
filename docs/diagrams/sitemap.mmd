@@ -1,0 +1,8 @@
+flowchart LR
+  subgraph g0["로컬 전용"]
+    n_S_01["S-01 생성 스튜디오<br/>/dashboard"]
+    n_S_02["S-02 생성 결과<br/>/dashboard?job={id}"]
+  end
+  n_S_01 --> n_S_02
+  n_S_02 --> n_S_01
+  n_S_02 --> n_S_02

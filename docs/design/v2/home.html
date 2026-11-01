@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>대시보드 — 시안 v2</title>
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="shell.css">
+<style>
+  .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: calc(var(--spacing) * 3); }
+  .stat { gap: calc(var(--spacing) * 2); padding: calc(var(--spacing) * 4); }
+  .stat .badge { justify-self: start; }
+  .stat .k { font-size: var(--text-caption); color: var(--color-text-muted); font-weight: 600; }
+  .stat .v { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: var(--text-h1); font-weight: 700; line-height: 1.2; }
+  .stat .v small { font-size: var(--text-caption); color: var(--color-text-muted); font-weight: 400; margin-left: var(--spacing); }
+  .bento { display: grid; grid-template-columns: repeat(2, 1fr); gap: calc(var(--spacing) * 3); }
+  .tile { display: grid; gap: calc(var(--spacing) * 2); align-content: start; padding: calc(var(--spacing) * 3); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-card); background: var(--color-bg); color: inherit; text-decoration: none; min-width: 0; }
+  a.tile:hover { border-color: var(--color-accent); }
+  .tile p { font-size: var(--text-caption); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .tile .row { justify-content: space-between; }
+  .tile.big { grid-column: span 2; }
+  .tile.big p { font-size: var(--text-body); }
+  .tile.off { cursor: default; }
+  .cta { display: grid; gap: calc(var(--spacing) * 3); background: linear-gradient(135deg, color-mix(in srgb, var(--color-accent) 22%, var(--color-surface)), var(--color-surface)); }
+  .running { display: grid; gap: calc(var(--spacing) * 3); }
+  .top { display: grid; gap: calc(var(--spacing) * 4); }
+  @media (width >= 768px) {
+    .bento { grid-template-columns: repeat(3, 1fr); }
+    .tile.big { grid-row: span 2; grid-template-rows: 1fr auto auto; align-content: stretch; }
+    .tile.big .media { aspect-ratio: auto; min-height: calc(var(--spacing) * 40); }
+    .top { grid-template-columns: 1fr 1fr; }
+  }
+  @media (width >= 1200px) {
+    .stats { grid-template-columns: repeat(4, 1fr); }
+    .bento { grid-template-columns: repeat(4, 1fr); }
+  }
+</style>
+</head>
+<body data-page="home">
+<main class="main" id="main">
+  <div class="page-head">
+    <div><h1>대시보드</h1><p>GPU 상태와 최근 생성 영상을 한눈에 봅니다.</p></div>
+    <a class="btn btn-primary" href="studio.html">새 벤치마킹 생성</a>
+  </div>
+
+  <section class="stats" aria-label="상태 요약">
+    <div class="card stat"><span class="k">GPU</span><span class="v">59<small>% VRAM</small></span><span class="badge badge-success">RTX 3060 · 사용 가능</span></div>
+    <div class="card stat"><span class="k">대기 잡</span><span class="v">1<small>/ 3 상한</small></span><span class="badge badge-accent">1개 진행 중</span></div>
+    <div class="card stat"><span class="k">오늘 생성</span><span class="v">7<small>개</small></span><span class="caption muted">평균 3분 12초</span></div>
+    <div class="card stat"><span class="k">저장 공간</span><span class="v">182<small>/ 500 GB</small></span><span class="badge badge-warning">정리 권장 12개</span></div>
+  </section>
+
+  <div class="top">
+    <section class="card running" aria-labelledby="run-h">
+      <div class="card-head"><h2 id="run-h">진행 중</h2><a class="caption" href="progress.html">자세히 보기</a></div>
+      <div class="row" style="justify-content: space-between"><span>제품 클로즈업 회전 · B 방식</span><span class="mono">64%</span></div>
+      <div class="bar" role="progressbar" aria-label="job_8f2c 진행률" aria-valuenow="64" aria-valuemin="0" aria-valuemax="100"><i style="width:64%"></i></div>
+      <span class="caption muted">4/5 단계 · 생성 — 남은 시간 약 2분 10초</span>
+    </section>
+    <section class="card cta" aria-labelledby="cta-h">
+      <h2 id="cta-h">참고 영상으로 시작하기</h2>
+      <p class="muted">유튜브 URL을 넣으면 장면을 나누고 프롬프트 초안을 만들어 줍니다.</p>
+      <div class="row"><a class="btn" href="studio.html">벤치마킹 생성 열기</a><a class="btn" href="settings.html">분석 방식 설정</a></div>
+    </section>
+  </div>
+
+  <section class="card" aria-labelledby="recent-h">
+    <div class="card-head"><h2 id="recent-h">최근 생성</h2><a class="caption" href="#gallery">갤러리 전체 보기</a></div>
+    <div class="bento">
+      <a class="tile big" href="studio.html"><div class="media"><span class="media-tag">원본 대비</span><span class="play" aria-hidden="true">▶</span><span class="media-time">0:20</span></div>
+        <p>A matte black wireless earbud case slowly rotating on a reflective studio table, cinematic lighting.</p>
+        <div class="row"><span class="caption muted">20초 · 16:9 · B 방식</span><span class="badge badge-success">완료</span></div></a>
+      <a class="tile" href="studio.html"><div class="media alt"><span class="media-time">0:15</span></div><p>Morning coffee pour in slow motion, warm window light.</p><div class="row"><span class="caption muted">15초 · 9:16</span><span class="badge badge-success">완료</span></div></a>
+      <div class="tile off" aria-disabled="true"><div class="media warm"><span class="media-time">0:30</span></div><p>Running shoes on wet asphalt, low angle tracking shot.</p><div class="row"><span class="caption muted">30초 · 16:9</span><span class="badge badge-accent">생성 중</span></div></div>
+      <a class="tile" href="studio.html"><div class="media"><span class="media-time">0:20</span></div><p>Skincare bottle with water droplets, macro lens.</p><div class="row"><span class="caption muted">20초 · 9:16</span><span class="badge badge-success">완료</span></div></a>
+      <div class="tile off" aria-disabled="true"><div class="media alt"><span class="media-time">0:15</span></div><p>City night timelapse with neon reflections.</p><div class="row"><span class="caption muted">15초 · 16:9</span><span class="badge badge-danger">실패</span></div></div>
+    </div>
+  </section>
+</main>
+<script src="shell.js"></script>
+</body>
+</html>

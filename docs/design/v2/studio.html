@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>벤치마킹 생성 스튜디오 — 시안 v2</title>
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="shell.css">
+<style>
+  .source { display: grid; gap: calc(var(--spacing) * 4); }
+  .source-url { display: grid; gap: calc(var(--spacing) * 2); }
+  .source-opts { display: grid; gap: calc(var(--spacing) * 4); }
+  .work { display: grid; gap: calc(var(--spacing) * 4); }
+  .scenes { list-style: none; margin: 0; padding: 0; display: grid; gap: calc(var(--spacing) * 2); }
+  .scene { display: grid; grid-template-columns: auto 1fr auto; gap: calc(var(--spacing) * 3); align-items: center; padding: calc(var(--spacing) * 2.5) calc(var(--spacing) * 3); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-control); background: var(--color-bg); }
+  .scene[aria-current="true"] { border-color: var(--color-accent); background: color-mix(in srgb, var(--color-accent) 12%, var(--color-bg)); }
+  .scene .no { color: var(--color-accent-text); font-family: var(--font-mono); font-size: var(--text-caption); }
+  .scene p { font-size: var(--text-caption); color: var(--color-text-muted); }
+  .scene b { display: block; font-weight: 600; }
+  .frames { display: grid; grid-template-columns: repeat(3, 1fr); gap: calc(var(--spacing) * 2); border: 0; margin: 0; padding: 0; min-width: 0; }
+  .frames legend { font-size: var(--text-caption); color: var(--color-text-muted); font-weight: 600; margin-bottom: calc(var(--spacing) * 1.5); padding: 0; }
+  .frame { position: relative; }
+  .frame input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+  .frame .media { border-width: calc(var(--border-width) * 2); }
+  .frame input:checked + .media { border-color: var(--color-accent); box-shadow: var(--shadow-glow); }
+  .frame input:focus-visible + .media { outline: calc(var(--spacing) / 2) solid var(--color-accent); outline-offset: calc(var(--spacing) / 2); }
+  .check { position: absolute; right: calc(var(--spacing) * 1.5); top: calc(var(--spacing) * 1.5); display: none; place-items: center; width: calc(var(--spacing) * 5); height: calc(var(--spacing) * 5); border-radius: 50%; background: var(--color-accent); color: var(--color-on-accent); font-size: var(--text-caption); font-weight: 700; }
+  .frame input:checked + .media .check { display: grid; }
+  .preview-body { display: grid; gap: calc(var(--spacing) * 3); }
+  .pair { display: grid; gap: calc(var(--spacing) * 3); }
+  .pair figure { margin: 0; display: grid; gap: calc(var(--spacing) * 1.5); }
+  .pair figcaption { font-size: var(--text-caption); color: var(--color-text-muted); display: flex; justify-content: space-between; gap: calc(var(--spacing) * 2); }
+  .scrub { display: grid; grid-template-columns: repeat(6, 1fr); gap: var(--spacing); }
+  .scrub i { height: calc(var(--spacing) * 2); border-radius: var(--radius-pill); background: var(--color-surface-high); }
+  .scrub i.on { background: var(--color-accent); }
+  @media (width >= 768px) {
+    .source-url { grid-template-columns: 1fr auto; align-items: end; }
+    .source-opts { grid-template-columns: 1fr 1fr; }
+    .work { grid-template-columns: 1fr 1fr; align-items: start; }
+  }
+  @media (width >= 1200px) {
+    .pair.side { grid-template-columns: 1fr 1fr; }
+    .work { grid-template-columns: 5fr 7fr; }
+    .preview { position: sticky; top: calc(var(--spacing) * 8); }
+  }
+</style>
+</head>
+<body data-page="studio">
+<main class="main" id="main">
+  <div class="page-head">
+    <div><h1>벤치마킹 생성</h1><p>참고할 유튜브 영상을 분석해 장면·프롬프트 초안을 만들고, 새 영상을 생성합니다.</p></div>
+    <span class="badge badge-success">분석 완료 · 6개 장면</span>
+  </div>
+
+  <!-- 1. 소스 -->
+  <section class="card source" aria-labelledby="src-h">
+    <h2 id="src-h"><span class="step-no">1</span>참고 영상</h2>
+    <div class="source-url">
+      <div class="field">
+        <label for="yt">유튜브 URL</label>
+        <input class="input mono" id="yt" type="url" value="https://www.youtube.com/watch?v=dQw4w9WgXcQ" placeholder="https://www.youtube.com/watch?v=…">
+      </div>
+      <button class="btn btn-primary" type="button">분석 시작</button>
+    </div>
+    <div class="source-opts">
+      <fieldset class="seg">
+        <legend>분석 방식</legend>
+        <label class="opt"><input type="radio" name="analyzer" checked><span><b>로컬 분석</b><small>GPU · 무료 · 느림</small></span></label>
+        <label class="opt"><input type="radio" name="analyzer"><span><b>Claude API</b><small>정확 · 유료 · 키 필요</small></span></label>
+      </fieldset>
+      <fieldset class="seg">
+        <legend>제작 방식</legend>
+        <label class="opt"><input type="radio" name="mode" checked><span><b>A 텍스트 → 영상</b><small>프롬프트만으로 생성</small></span></label>
+        <label class="opt"><input type="radio" name="mode"><span><b>B 캡처 이미지 → 영상</b><small>대표 프레임에서 시작</small></span></label>
+      </fieldset>
+    </div>
+  </section>
+
+  <div class="work">
+    <!-- 2. 분석 결과 (좌 설정) -->
+    <div class="stack">
+      <section class="card" aria-labelledby="scene-h">
+        <div class="card-head"><h2 id="scene-h"><span class="step-no">2</span>장면 목록</h2><span class="caption muted mono">총 0:42</span></div>
+        <ol class="scenes">
+          <li class="scene" aria-current="true"><span class="no">01</span><div><b>제품 클로즈업 회전</b><p>부드러운 패닝 · 스튜디오 조명</p></div><span class="caption mono muted">0:00–0:06</span></li>
+          <li class="scene"><span class="no">02</span><div><b>손으로 집어 드는 컷</b><p>얕은 심도 · 따뜻한 톤</p></div><span class="caption mono muted">0:06–0:13</span></li>
+          <li class="scene"><span class="no">03</span><div><b>야외 사용 장면</b><p>역광 · 핸드헬드</p></div><span class="caption mono muted">0:13–0:24</span></li>
+          <li class="scene"><span class="no">04</span><div><b>로고 엔드카드</b><p>정적 · 중앙 정렬</p></div><span class="caption mono muted">0:24–0:42</span></li>
+        </ol>
+      </section>
+
+      <section class="card" aria-labelledby="frame-h">
+        <div class="card-head"><h2 id="frame-h"><span class="step-no">3</span>대표 프레임</h2><span class="badge badge-accent">B 방식에서 사용</span></div>
+        <fieldset class="frames">
+          <legend>장면 01에서 시작 이미지로 쓸 프레임 선택</legend>
+          <label class="frame"><input type="radio" name="frame" checked aria-label="프레임 0:01"><span class="media"><span class="media-time">0:01</span><span class="check" aria-hidden="true">✓</span></span></label>
+          <label class="frame"><input type="radio" name="frame" aria-label="프레임 0:03"><span class="media alt"><span class="media-time">0:03</span><span class="check" aria-hidden="true">✓</span></span></label>
+          <label class="frame"><input type="radio" name="frame" aria-label="프레임 0:05"><span class="media warm"><span class="media-time">0:05</span><span class="check" aria-hidden="true">✓</span></span></label>
+        </fieldset>
+      </section>
+
+      <section class="card" aria-labelledby="prompt-h">
+        <div class="card-head"><h2 id="prompt-h"><span class="step-no">4</span>프롬프트 초안</h2><button class="btn" type="button">다시 쓰기</button></div>
+        <div class="field">
+          <label for="prompt">긍정 프롬프트 (분석 결과로 자동 작성, 수정 가능)</label>
+          <textarea class="textarea" id="prompt">A matte black wireless earbud case slowly rotating on a reflective studio table, soft key light from the left, cinematic lighting, smooth pan, hyper-realistic product shot, shallow depth of field.</textarea>
+          <span class="hint mono">186 / 1000자</span>
+        </div>
+        <fieldset class="seg compact">
+          <legend>길이</legend>
+          <label class="opt"><input type="radio" name="dur"><span><b>15초</b></span></label>
+          <label class="opt"><input type="radio" name="dur" checked><span><b>20초</b></span></label>
+          <label class="opt"><input type="radio" name="dur"><span><b>30초</b></span></label>
+        </fieldset>
+        <fieldset class="seg compact">
+          <legend>비율</legend>
+          <label class="opt"><input type="radio" name="ar"><span><b>세로 (9:16)</b></span></label>
+          <label class="opt"><input type="radio" name="ar" checked><span><b>가로 (16:9)</b></span></label>
+        </fieldset>
+        <fieldset class="seg">
+          <legend>엔진</legend>
+          <label class="opt"><input type="radio" name="eng" checked><span><b>LTX-Distilled</b><small>고속 프리뷰 · 4~8 스텝</small></span></label>
+          <label class="opt"><input type="radio" name="eng"><span><b>LTX-Dev</b><small>고화질 정밀</small></span></label>
+        </fieldset>
+        <a class="btn btn-primary btn-block" href="progress.html">영상 생성하기</a>
+      </section>
+    </div>
+
+    <!-- 우 미리보기 -->
+    <section class="card preview" aria-labelledby="pv-h">
+      <div class="card-head">
+        <h2 id="pv-h">미리보기</h2>
+        <div class="tabs" role="tablist" aria-label="미리보기 보기 방식">
+          <button class="tab" role="tab" id="t-src" aria-controls="p-src" aria-selected="false" tabindex="-1">원본</button>
+          <button class="tab" role="tab" id="t-gen" aria-controls="p-gen" aria-selected="false" tabindex="-1">생성</button>
+          <button class="tab" role="tab" id="t-both" aria-controls="p-both" aria-selected="true">나란히</button>
+        </div>
+      </div>
+      <div class="preview-body" role="tabpanel" id="p-src" aria-labelledby="t-src" hidden>
+        <div class="media"><span class="media-tag">원본 · YouTube</span><span class="play" aria-hidden="true">▶</span><span class="media-time">0:00 / 0:42</span></div>
+      </div>
+      <div class="preview-body" role="tabpanel" id="p-gen" aria-labelledby="t-gen" hidden>
+        <div class="media alt"><span class="media-tag">생성 · 장면 01</span><span class="play" aria-hidden="true">▶</span><span class="media-time">0:00 / 0:20</span></div>
+      </div>
+      <div class="preview-body" role="tabpanel" id="p-both" aria-labelledby="t-both">
+        <div class="pair side">
+          <figure><div class="media"><span class="media-tag">원본</span><span class="play" aria-hidden="true">▶</span><span class="media-time">0:00–0:06</span></div><figcaption><span>YouTube · 장면 01</span><span class="mono">1920×1080</span></figcaption></figure>
+          <figure><div class="media alt"><span class="media-tag">생성</span><span class="play" aria-hidden="true">▶</span><span class="media-time">0:00–0:20</span></div><figcaption><span>LTX-Distilled · 20초</span><span class="mono">1280×720</span></figcaption></figure>
+        </div>
+      </div>
+      <div class="scrub" aria-label="장면 위치: 6개 중 1번째"><i class="on"></i><i></i><i></i><i></i><i></i><i></i></div>
+      <dl class="meta">
+        <dt>원본 길이</dt><dd class="mono">0:42</dd>
+        <dt>분석 방식</dt><dd>로컬 분석 (GPU)</dd>
+        <dt>제작 방식</dt><dd>A 텍스트 → 영상</dd>
+        <dt>최근 생성</dt><dd>2026-11-01 21:12 · 완료</dd>
+      </dl>
+      <div class="row row-end"><button class="btn" type="button">다운로드</button><button class="btn" type="button">프롬프트 복사</button></div>
+    </section>
+  </div>
+</main>
+<script src="shell.js"></script>
+</body>
+</html>
