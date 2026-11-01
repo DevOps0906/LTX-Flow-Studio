@@ -8,7 +8,7 @@
 | 쓰기 허용 | `apps/api/**`, `.env.example`(이름만) |
 
 ## 할 것
-- 키 저장소 어댑터(Q14 결정 위치), A-15 쓰기 전용·A-16 삭제, A-13은 `claude_key_set`·끝 4자만
+- 키 저장소 어댑터(Windows 자격 증명 관리자, Q14 확정 — 접근 라이브러리는 새 의존성이라 `security-baseline` 검토·승인 후), A-15 쓰기 전용·A-16 삭제, A-13은 `claude_key_set`·끝 4자만
 - `settings` 테이블은 `analysis_mode_default`만(키 금지)
 - 로그·오류 메시지·예외 문자열에서 키 제거(마스킹 필터)
 

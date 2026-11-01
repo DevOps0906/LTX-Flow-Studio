@@ -14,7 +14,7 @@
 | 모델 | `models/` | 가중치(로컬, git 제외) | — | 자동 커밋 |
 | 웹 진행 애니메이션 | `apps/web` | GSAP(버전·라이선스 **확인 필요**, task-023) | 프로그레스·단계 표시 트윈, reduced-motion 대체 | 상태 판단(값은 SSE만) |
 
-벤치마킹 생성 — 분석 파이프라인 구성 요소 (단계 계약: `05_STAGES.md#4`, 결정: ADR-003·ADR-004)
+새로운 영상생성 — 분석 파이프라인 구성 요소 (단계 계약: `05_STAGES.md#4`, 결정: ADR-003·ADR-004)
 | 구성 | 위치 | 기술 | 책임 | 하지 않는 것 |
 |---|---|---|---|---|
 | URL 검증기 | `apps/api` | 표준 URL 파서 + 호스트 허용 목록 | 영상 ID 추출 → 정규 URL 재구성(`04_API.md#6`) | 사용자 문자열을 그대로 다음 단계로 넘김 |
@@ -23,7 +23,7 @@
 | 자막·음성 인식 | `apps/api` | yt-dlp 자막 우선, 없으면 Whisper 구현체(미확인, task-014) | 자막 텍스트 | 원본 오디오 보관 연장 |
 | Analyzer: Local | `apps/api` | 로컬 소형 비전모델(후보 미확인, task-014) | 장면 캡션 → 프롬프트 초안 | LTX와 동시 GPU 적재 |
 | Analyzer: Claude | `apps/api` → `api.anthropic.com` | Anthropic API(모델·SDK 버전 확인 필요) | 프레임·자막 전송 → 캡션·프롬프트 초안 | 키를 브라우저·로그에 노출 |
-| 키 저장소 | 서버 로컬 | Q14(권고: Windows 자격 증명 관리자) | `ANTHROPIC_API_KEY` 쓰기·마스킹 조회 | 평문 SQLite·`outputs/` 저장 |
+| 키 저장소 | 서버 로컬 | Windows 자격 증명 관리자(Q14 확정) | `ANTHROPIC_API_KEY` 쓰기·마스킹 조회 | 평문 SQLite·`outputs/` 저장 |
 
 ## 2. 경계·연결
 | 경계 | 규칙 |
@@ -34,7 +34,7 @@
 | API → ComfyUI | `Stage` 인터페이스 뒤의 어댑터 1개. 미설정·미응답이면 스테이지 2 비활성(`GET /api/gpu`의 `stage2_available=false`) |
 | 파일 | `job_id`(서버 발급 UUID) → `outputs/<job_id>/final.mp4` 고정 매핑. 경로 입력 받지 않음. 분석물은 `analysis_id`(UUID) → `data/sources/<analysis_id>/{source.mp4, frames/NNN.jpg}` 고정 매핑(경로 제안) |
 | 외부 송신 | 허용 목록만: YouTube(yt-dlp가 접속, 대상은 정규 URL 하나) · `api.anthropic.com`(`analysis_mode=claude`만). 그 외 아웃바운드 없음 |
-| GPU 공유 | 분석(Whisper·로컬 비전모델)과 LTX는 **순차 사용** — 같은 GPU 잠금, 단계 전후 모델 해제. 같은 큐 공유 여부 Q15(권고: 공유 FIFO) |
+| GPU 공유 | 분석(Whisper·로컬 비전모델)과 LTX는 **순차 사용** — 같은 GPU 잠금, 단계 전후 모델 해제. 같은 GPU FIFO·큐 5개 공유(Q15 확정) |
 
 ## 3. 데이터 흐름
 1. 사용자가 S-01에서 설정 후 생성 → `POST /api/jobs`(`stages=[1]` 또는 `[1,2]`) → SQLite에 `queued` 기록.

@@ -13,7 +13,7 @@
   const page = document.body.dataset.page;
   const items = [
     ['home', '대시보드', 'home.html'],
-    ['studio', '벤치마킹 생성', 'studio.html'],
+    ['studio', '새로운 영상생성', 'studio.html'],
     ['gallery', '갤러리', '#gallery'],
     ['settings', '설정', 'settings.html'],
   ];

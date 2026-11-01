@@ -13,7 +13,7 @@
 - 웹 타입을 `04_API.md#2` Analysis·JobCreate 확장과 맞춤
 
 ## 하지 않을 것
-- 브라우저에서 URL로 외부 요청, Claude 키 처리, 고지 문구 임의 확정(Q11)
+- 브라우저에서 URL로 외부 요청, Claude 키 처리, 고지 문구 변경(`docs/01_PRD.md#6` 확정 문구 그대로)
 
 ## 완료 조건
 - [ ] `pnpm lint`·`pnpm typecheck`·`pnpm build`·`pnpm test` 통과

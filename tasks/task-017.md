@@ -9,7 +9,7 @@
 
 ## 할 것
 - `analyses` 테이블, A-08 생성(서버 재검증)·A-09 조회·A-10 SSE·A-11 원본·A-12 프레임(UUID·정수 경로만)
-- GPU 잠금 공유(분석·생성 순차), 큐 규칙은 Q15 결정대로, 재시작 시 `running` → `failed(interrupted)`
+- GPU 잠금 공유(분석·생성 순차), 생성 잡과 같은 FIFO·큐 5개 공유(Q15 확정), 재시작 시 `running` → `failed(interrupted)`
 - JobCreate에 `analysis_id`·`make_mode`·`keyframe_ids` 검증 추가(`analysis_not_done`·`keyframe_not_found`), `i2v`는 021 전까지 `i2v_unavailable`
 - 원본 사본 정리는 Q13 결정대로
 

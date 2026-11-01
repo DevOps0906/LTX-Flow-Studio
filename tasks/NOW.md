@@ -1,14 +1,15 @@
 # NOW — 재진입 스냅샷 (30줄 이내, 매 작업 끝에 덮어쓴다)
 
 - 갱신: 2026-11-01
-- 현재 작업: 신규 기능 "유튜브 벤치마킹 생성" 기획 반영 + 작업 분해(task-014~027) — 상태: 초안 완료(팀장 결정 대기)
-- 마지막으로 한 일: PRD R-B1~R-B6·용어·Q10~Q19, ARCH 분석 구성요소, SCREENS S-03~S-07·GNB, API A-07~A-16·위협 메모 #6, STAGES #4 분석·#5 방식 A/B, SDLC W5~W7·MVP 경계 권고, ADR-003·004, mmd 2종
-- 다음 한 걸음: 팀장 Q10(MVP 경계) 결정 → codex-designer S-03~S-07 교차 검토 → reviewer(doc) → diagrammer(mmd-check·SVG·sitemap 재생성)
-- 열린 결정(미결): PRD `#7` Q4·Q6·Q7·Q8·Q9 + 벤치마킹 Q10~Q19, PRD `#8` L1 유지 여부, `http` 스킴 허용, Claude 재시도 정책
-- 확인 필요: GSAP 버전·라이선스 · LTX I2V 지원·파라미터 · yt-dlp·Whisper·비전모델·장면 감지 라이선스·VRAM · Claude 모델·이미지 상한·비용·오디오 입력 · yt-dlp 옵션명 · 영상 ID 형식 · 키 형식 규칙
-- 주의: 저작권·YouTube 약관은 사용자 결정(Q11·Q12) 전 기능 플래그 꺼짐. 수치(상한) 추측 금지(Q16)
-- SDLC 단계: 02·03·05 벤치마킹 초안, 06 구현 뼈대 단계 (`docs/06_SDLC.md`)
+- 현재 작업: 사용자 "권고안대로 진행" 승인 → 벤치마킹 결정(Q10~Q12·Q14·Q15·Q17·Q18)·디자인 v2 채택 문서 반영 — 상태: 완료(문서만, 코드 변경 없음)
+- 마지막으로 한 일: PRD #3 릴리스 표(1 / 2-1 / 2-2)·#6 고지 문구 확정·#7 결정 이동(+Q20~Q22 신규), SCREENS S-03·S-07 고지·플래그, SDLC #1·#3·#6, ARCH·API·STAGES·ADR-003·004 참조 갱신, tasks/README 릴리스 열, task-016·017·019·021·022·024·027, README 진행 현황
+- 다음 한 걸음: 앱에 v2 토큰 적용(builder) → `DESIGN.md#7.5` 채택 표시 갱신(쓰기 범위 밖이라 미반영) → Q20·Q22 결정 → reviewer(doc) → task-002
+- 열린 결정(미결): PRD `#7` Q4·Q6·Q7·Q8·Q9 · Q13(원본 보관)·Q16(상한 수치)·Q19(동시 재생) · Q20(GNB 셸 담당 작업)·Q21(동의·플래그 저장 위치·API 필드)·Q22(대시보드 S-01 vs v2 홈) · PRD `#8` L1 유지 여부 · `http` 스킴 허용 · Claude 재시도 정책 · 분석 방식 기본값
+- 확인 필요: YouTube 약관 충돌 여부 · GSAP 버전·라이선스 · LTX I2V 지원·파라미터 · yt-dlp·Whisper·비전모델·장면 감지 라이선스·VRAM · 자격 증명 관리자 접근 라이브러리(새 의존성) · Claude 모델·이미지 상한·비용 · yt-dlp 옵션명 · 영상 ID 형식 · 키 형식 규칙
+- 디자인 결정: accent `#6062e9` · accent-text `#818cf8` · 신규 토큰 채택 · `--font-mono`는 시스템 폰트 스택 우선(JetBrains Mono·D2Coding 보류). `docs/design/v2/tokens.css`의 `--font-mono`는 아직 JetBrains 우선 → 앱 적용 때 교정
+- 주의: 다운로드·방식 B 기능 플래그 기본 꺼짐(동의 후 켬). 수치(상한) 추측 금지(Q16)
+- SDLC 단계: 02 릴리스 경계 확정 · 04 시안 완료·앱 적용 진행 · 06 릴리스 1 뼈대 (`docs/06_SDLC.md#1`)
 - 담당 모델/역할: planner(기획 문서 대리)
-- 수정 파일: docs/01~06, docs/adr/ADR-003·004(신규), docs/diagrams/analysis-pipeline.mmd·analysis-state.mmd(신규), tasks/README.md, tasks/task-014~027.md(신규), README.md 진행 현황 표
-- 테스트 상태: mmd-check 미실행(셸 도구 없음)
-- 남은 작업: task-001~013(대기), task-014~027(보류, Q10)
+- 수정 파일: docs/01_PRD·02·03·04·05·06, docs/adr/ADR-003·004, tasks/README.md·NOW.md, tasks/task-016·017·019·021·022·024·027, README.md
+- 테스트 상태: 문서만 변경(mmd 변경 없음)
+- 남은 작업: 릴리스 1 task-001~013(대기) · 2-1 9개·2-2 5개(보류, 릴리스 1 완료 후 착수)

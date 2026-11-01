@@ -12,7 +12,7 @@
 | A-05 | `GET /api/files/{id}.mp4` | path `id`(UUID만) | 200 `video/mp4`, Range 지원, `?download=1`이면 `Content-Disposition: attachment` | 404(없음·미완료) |
 | A-06 | `GET /api/gpu` | — | 200 GpuStatus(`#2`) | 503 GPU 미검출 |
 | A-07 | `POST /api/sources/validate` | `{url}` | 200 `{video_id, canonical_url}` — 네트워크 접속 없이 형식만 검사 | 400 `invalid_url` · 400 `host_not_allowed` · 400 `unsupported_url`(재생목록·라이브 등) |
-| A-08 | `POST /api/analyses` | AnalysisCreate(`#2`) | 201 Analysis. 서버가 A-07 검사를 다시 한다 | A-07 오류 · 409 `claude_key_missing` · 429 `queue_full`(Q15) |
+| A-08 | `POST /api/analyses` | AnalysisCreate(`#2`) | 201 Analysis. 서버가 A-07 검사를 다시 한다 | A-07 오류 · 409 `claude_key_missing` · 429 `queue_full`(생성 잡과 공유 큐, Q15 확정) |
 | A-09 | `GET /api/analyses/{id}` | path `id`(UUID) | 200 Analysis | 404 |
 | A-10 | `GET /api/analyses/{id}/events` (SSE) | path `id` | 이벤트 `#3` 분석 표. 연결 시 현재 상태 1회 | 404 |
 | A-11 | `GET /api/analyses/{id}/source.mp4` | path `id`(UUID만) | 200 `video/mp4`, Range 지원. **다운로드 헤더 없음**(재배포 방지) — 존치는 Q13 | 404(없음·삭제됨) |
@@ -26,7 +26,7 @@
 ## 2. 스키마 (Pydantic v2 · 웹 소비 타입과 같은 작업에서 맞춘다)
 | 객체 | 필드 |
 |---|---|
-| JobCreate | `prompt`(필수, 최대 2000자) · `negative_prompt?` · `duration`: 15\|20\|30(기본 15) · `aspect`: `"9:16"`\|`"16:9"` · `stages`: `[1]`\|`[1,2]`(기본 `[1]`) · `engine`: `"distilled"`\|`"dev"`(기본 `"distilled"`, 차이는 `05_STAGES.md#2`) · 벤치마킹: `analysis_id?`(UUID, `done`이어야 함) · `make_mode`: `"t2v"`\|`"i2v"`(기본 `"t2v"`, `i2v`는 `analysis_id` 필수) · `keyframe_ids?`: 정수 배열(`i2v`만, 매핑 Q18) |
+| JobCreate | `prompt`(필수, 최대 2000자) · `negative_prompt?` · `duration`: 15\|20\|30(기본 15) · `aspect`: `"9:16"`\|`"16:9"` · `stages`: `[1]`\|`[1,2]`(기본 `[1]`) · `engine`: `"distilled"`\|`"dev"`(기본 `"distilled"`, 차이는 `05_STAGES.md#2`) · 벤치마킹: `analysis_id?`(UUID, `done`이어야 함) · `make_mode`: `"t2v"`\|`"i2v"`(기본 `"t2v"`, `i2v`는 `analysis_id` 필수) · `keyframe_ids?`: 정수 배열(`i2v`만, 세그먼트마다 1개 — Q18 확정) |
 | JobCreate 오류(추가) | 409 `analysis_not_done` · 400 `keyframe_not_found` · 409 `i2v_unavailable`(I2V 미지원 확인 시) |
 | AnalysisCreate | `url`(필수, 길이 상한 Q16) · `analysis_mode`: `"local"`\|`"claude"`(생략 시 Settings 기본값) |
 | Analysis | `id`(UUID) · `video_id` · `analysis_mode` · `status`: `queued`·`running`·`done`·`failed` · `step`: `download`·`scenes`·`transcript`·`describe`·`draft`\|null · `step_index`/`steps_total` · `progress`(0~100) · `message` · `scenes`: `[{index, start_s, end_s, frame_url, caption}]` · `transcript_source`: `"subtitle"`\|`"whisper"`\|null · `prompt_draft` · `negative_prompt_draft?` · `source_url?`(A-11) · `error_code?` · `created_at`·`finished_at?` (재시작 시 `running` → `failed(interrupted)`) |
@@ -90,12 +90,12 @@
 |---|---|
 | 노출 면 | 로컬 API A-07~A-16(`#5` 가드 동일 적용, `PUT`·`DELETE`도 Origin 검사). 외부 송신: YouTube(yt-dlp) · `api.anthropic.com`(claude 모드). 인터넷 수신 없음 |
 | 인증·인가 | 없음(단일 로컬 사용자). 키 설정·삭제는 Origin 가드 필수 — CSRF로 공격자 키를 심으면 원본 프레임이 공격자 계정으로 전송됨 |
-| 다루는 데이터 | 원본 임시 사본·장면 이미지·자막(저작물) · Claude API 키 · 프롬프트 초안. 저작권·약관은 **확인 필요 / 사용자 결정**(`01_PRD.md#6` 표, Q11~Q13) |
-| 키·권한 | `ANTHROPIC_API_KEY`: 서버 전용 저장(위치 Q14, SQLite·`outputs/`·`data/sources/` 금지) · A-13은 `claude_key_set`·끝 4자 마스킹만 · 원문을 브라우저로 다시 보내지 않음 · Claude 호출은 서버에서만 |
+| 다루는 데이터 | 원본 임시 사본·장면 이미지·자막(저작물) · Claude API 키 · 프롬프트 초안. 저작권·약관 방침은 `01_PRD.md#6` 표(Q11·Q12 확정, Q13 미결, 약관 충돌 여부 **확인 필요**) |
+| 키·권한 | `ANTHROPIC_API_KEY`: 서버 전용 저장(Windows 자격 증명 관리자 — Q14 확정, SQLite·`outputs/`·`data/sources/` 금지) · A-13은 `claude_key_set`·끝 4자 마스킹만 · 원문을 브라우저로 다시 보내지 않음 · Claude 호출은 서버에서만 |
 | 입력: URL | 표준 파서로 분해 → 스킴 `https`만(`http` 허용 여부 팀장 결정 필요) → 호스트 정확 일치 허용 목록 `youtube.com`·`www.youtube.com`·`m.youtube.com`·`youtu.be`(서브도메인 와일드카드·IP·포트·userinfo 거부) → 경로 `/watch?v=`·`/shorts/<id>`·`youtu.be/<id>`만 → 영상 ID 정규식(형식 확인 필요) → 서버가 `https://www.youtube.com/watch?v=<id>` **재구성**. 원 문자열은 다음 단계로 넘기지 않는다 |
 | 입력: 명령 | yt-dlp·ffmpeg는 인자 **배열**로 실행(셸 금지), 인자 고정: 설정 파일 무시·재생목록 금지·출력 템플릿 고정(`data/sources/<analysis_id>/`)·크기 상한(Q16)·`--` 뒤에 정규 URL 하나. 사용자 입력으로 옵션·포맷·경로를 받지 않는다. 옵션명은 설치 버전 문서로 **확인 필요**(task-016) |
 | 체인 | DNS 리바인딩 + 무검증 A-08 → 임의 다운로드·GPU 독점·Claude 과금 / URL 허용 목록 우회 → yt-dlp가 내부망 접속(SSRF) / 옵션 주입 → `--exec` 류 실행. 각각 `#5` 가드 · 허용 목록+재구성 · 인자 고정으로 차단 |
 | 피해 범위 | 키 유출 → 사용자 Anthropic 과금. 원본 사본은 로컬 `data/sources/`만. 다른 경로·키에 닿지 않음 |
-| 남용 | 분석 큐 상한(Q15) · 원본 길이·크기·장면 수·Claude 전송 프레임 수 상한(Q16) · 동시 GPU 1작업 |
+| 남용 | 분석 큐 = 생성 잡과 공유 큐 5개(Q15 확정) · 원본 길이·크기·장면 수·Claude 전송 프레임 수 상한(Q16) · 동시 GPU 1작업 |
 | 로그 | `analysis_id`·`video_id`·단계·오류 코드·시간 O / API 키·Authorization 헤더·Claude 요청·응답 본문·자막 전문·외부 오류 원문 X |
-| 결정 | 허용 목록 + 정규 URL 재구성 + 인자 배열 고정 + 키 쓰기 전용·마스킹 + 외부 송신 허용 목록. 저작권 고지 문구는 사용자 결정(Q11) |
+| 결정 | 허용 목록 + 정규 URL 재구성 + 인자 배열 고정 + 키 쓰기 전용·마스킹 + 외부 송신 허용 목록 + 다운로드·방식 B 기능 플래그 기본 꺼짐(동의 후 켬, 저장 필드 Q21). 고지 문구는 `01_PRD.md#6` 확정 |

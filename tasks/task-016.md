@@ -11,7 +11,7 @@
 - 호스트 정확 일치 허용 목록 + 경로 패턴 + 영상 ID 추출 → 정규 URL 재구성
 - yt-dlp를 인자 배열로 실행(셸 금지), task-014에서 확인한 고정 옵션만, 출력 `data/sources/<analysis_id>/`
 - 오류 매핑: `invalid_url`·`host_not_allowed`·`unsupported_url`·`source_unavailable`·`download_failed`
-- 사용자 결정 Q11 고지 문구 반영 전에는 기능 플래그 꺼짐
+- 기능 플래그 기본 꺼짐, 사용자가 고지(`docs/01_PRD.md#6` 확정 문구)에 동의한 뒤에만 켬(Q11 확정). 동의 저장 위치는 Q21 결정대로
 
 ## 하지 않을 것
 - 사용자 입력으로 옵션·포맷·경로 받기, 재생목록·라이브 지원, 상한값 임의 결정(Q16)
