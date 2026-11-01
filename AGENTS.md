@@ -7,20 +7,12 @@
 이커머스·마케터·숏폼 크리에이터를 위한, 로컬 GPU(RTX 3060 12GB)에서 LTX-Distilled로 15~30초 영상을 만드는 단일 대시보드. 랜딩 없음(시작 즉시 `/dashboard`). 1단계=LTX 직접 생성(단독 완결), 2단계=ComfyUI 고해상도(선택). 기획 정본: `docs/01_PRD.md` · 구조: `docs/02_ARCHITECTURE.md`.
 
 ## 2. 스택 (작업 시 최신 stable 확인 후 버전 고정)
-| 영역 | 선택 | 위치 |
-|---|---|---|
-| 웹 | Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS v4 | `apps/web` |
-| 워커·API | FastAPI · Pydantic v2 · uv · diffusers LTX-Video(distilled) · SQLite · SSE | `apps/api` |
-| 2단계 | 기존 설치된 ComfyUI(REST/WS 연동, 선택 플러그인) | 외부 경로 `.env` |
-| 후처리 | ffmpeg | PATH |
+- `apps/web`: Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS v4
+- `apps/api`: FastAPI · Pydantic v2 · uv · diffusers LTX-Video(distilled) · SQLite · SSE
+- 2단계: 기존 설치된 ComfyUI(REST/WS, 경로는 `.env`) · 후처리: ffmpeg(PATH)
 
-## 3. 명령
-| 목적 | 명령 |
-|---|---|
-| 설치 | `pnpm install` · `cd apps/api && uv sync` |
-| 개발 서버 | `pnpm dev`(웹 3000) · `cd apps/api && uv run uvicorn app.main:app --host 127.0.0.1 --port 8000` |
-| 린트 · 타입 | `pnpm lint` · `pnpm typecheck` |
-| 테스트 | `pnpm test` · `cd apps/api && uv run pytest -q` |
+## 3. 명령 (개발 서버는 영역 규칙 파일에)
+설치 `pnpm install` · `cd apps/api && uv sync` / 검사 `pnpm lint` · `pnpm typecheck` · `pnpm test` · `cd apps/api && uv run pytest -q`
 긴 출력 명령은 `~/.claude/nomad/bin/q <명령>`으로 실행한다.
 
 ## 4. 절대 규칙 (위반 = 리뷰 🔴)
@@ -54,5 +46,4 @@
 | `apps/api/**` | `.claude/rules/api.md` |
 | `docs/**` · `DESIGN.md` | `.claude/rules/docs.md` |
 - 읽지 않는 파일: `.env*` · lock 파일 · `node_modules/` · `.next/` · `dist/` · `build/` · `coverage/` (Claude는 `.claude/settings.json`, Gemini는 `.geminiignore`가 강제, ChatGPT Codex는 이 줄로 지킨다).
-- 도구별 설정: Claude Code `CLAUDE.md`·`.claude/` · ChatGPT Codex `.codex/config.toml` · Gemini CLI `.gemini/settings.json`·`.geminiignore`.
-- 새 규칙 파일을 추가하면 이 표에도 한 줄 추가한다.
+- 도구별 설정: `.claude/` · `.codex/config.toml` · `.gemini/`. 새 규칙 파일은 이 표에 한 줄 추가한다.
