@@ -1,0 +1,39 @@
+[project]
+name = "ltx-api"
+version = "0.1.0"
+description = "LTX Nomad Studio 로컬 GPU 워커 API"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.162",
+    "pydantic>=2.14",
+    "pydantic-settings>=2.16",
+    "uvicorn>=0.54",
+]
+
+[project.optional-dependencies]
+# 실제 LTX 추론용. 기본 설치에서는 받지 않는다: `uv sync --extra ltx`
+ltx = [
+    "torch>=2.5",
+    "diffusers>=0.32",
+]
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28",
+    "pytest>=9.2",
+    "ruff>=0.17",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]

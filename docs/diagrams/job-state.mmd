@@ -1,0 +1,12 @@
+stateDiagram-v2
+  [*] --> queued: POST /api/jobs
+  queued --> running_stage1: GPU 비어 있음
+  running_stage1 --> done: stages=[1]
+  running_stage1 --> running_stage2: stages=[1,2]
+  running_stage2 --> done
+  running_stage1 --> failed: oom / ffmpeg_failed / model_missing
+  running_stage2 --> failed: stage2_failed
+  running_stage1 --> failed: interrupted (서버 재시작)
+  running_stage2 --> failed: interrupted
+  done --> [*]
+  failed --> [*]

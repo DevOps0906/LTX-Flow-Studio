@@ -1,0 +1,11 @@
+{
+  "name": "ltx-nomad-studio",
+  "private": true,
+  "packageManager": "pnpm@10.34.8",
+  "scripts": {
+    "dev": "pnpm --filter @ltx/web dev",
+    "build": "pnpm --filter @ltx/web build",
+    "lint": "pnpm --filter @ltx/web lint",
+    "typecheck": "pnpm --filter @ltx/web typecheck"
+  }
+}

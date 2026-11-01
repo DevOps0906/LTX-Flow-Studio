@@ -1,0 +1,19 @@
+.nomad/
+.env
+.env.*
+!.env.example
+node_modules/
+.next/
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
+
+# 모델/출력
+models/
+outputs/
+*.db
+__pycache__/
+.venv/

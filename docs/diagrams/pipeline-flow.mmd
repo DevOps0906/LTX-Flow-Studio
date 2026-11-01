@@ -1,0 +1,14 @@
+flowchart TD
+  A["S-01 생성 스튜디오<br/>POST /api/jobs"] --> B["SQLite jobs<br/>status=queued"]
+  B --> C{"GPU 비어 있음?"}
+  C -- 아니오 --> B
+  C -- 예 --> D["스테이지 1: LTX distilled<br/>~5초 세그먼트 N개 (720p)"]
+  D --> E["ffmpeg 연결<br/>outputs/job_id/stage1.mp4"]
+  E --> F{"stages에 2 포함?"}
+  F -- 아니오 --> H["final.mp4 (720p)<br/>status=done"]
+  F -- 예 --> G["스테이지 2: ComfyUI<br/>COMFYUI_URL 고해상도 1080p"]
+  G --> H2["final.mp4 (1080p)<br/>status=done"]
+  D -. OOM .-> X["status=failed"]
+  G -. 실패 .-> X
+  H --> P["S-02 재생·다운로드<br/>GET /api/files/id.mp4"]
+  H2 --> P

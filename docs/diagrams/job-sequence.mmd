@@ -1,0 +1,27 @@
+sequenceDiagram
+  participant W as 웹 (Next.js /dashboard)
+  participant A as API (FastAPI 127.0.0.1:8000)
+  participant DB as SQLite
+  participant S1 as 스테이지 1 (diffusers LTX)
+  participant C as ComfyUI (스테이지 2, 선택)
+  W->>A: GET /api/gpu
+  A-->>W: GpuStatus (stage2_available)
+  W->>A: POST /api/jobs (stages=[1] 또는 [1,2])
+  A->>DB: insert job (queued)
+  A-->>W: 201 Job
+  W->>A: SSE /api/jobs/{id}/events
+  A-->>W: event status (queued)
+  A->>S1: 세그먼트 1..N 생성
+  loop 세그먼트마다
+    S1-->>A: progress
+    A-->>W: event progress
+  end
+  A->>A: ffmpeg 연결 (stage1.mp4)
+  opt stages에 2 포함
+    A->>C: 워크플로 제출 (REST/WS)
+    C-->>A: 1080p 결과
+  end
+  A->>DB: update job (done)
+  A-->>W: event done (video_url)
+  W->>A: GET /api/files/{id}.mp4
+  A-->>W: video/mp4
