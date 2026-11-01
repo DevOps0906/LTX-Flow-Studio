@@ -1,0 +1,20 @@
+flowchart TD
+  layout["dashboard/layout.tsx"]
+  page["dashboard/page.tsx"]
+  header["AppHeader (app-header)"]
+  gpu["GpuStatus (gpu-status)"]
+  studio["Studio (studio)"]
+  ctrl["ControlPanel (control-panel)"]
+  player["PlayerPanel (player-panel)"]
+  gallery["RecentGallery (recent-gallery)"]
+  panel["Panel (공통 패널)"]
+  toggle["ToggleGroup (토글 그룹)"]
+  layout --> header --> gpu
+  layout --> page --> studio
+  studio --> ctrl
+  studio --> player
+  studio --> gallery
+  ctrl --> panel
+  ctrl --> toggle
+  player --> panel
+  gallery --> panel

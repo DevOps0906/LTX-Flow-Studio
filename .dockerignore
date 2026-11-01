@@ -1,0 +1,16 @@
+.git
+**/node_modules
+**/.next
+**/.venv
+**/__pycache__
+**/*.tsbuildinfo
+.env
+.env.*
+!.env.example
+models
+outputs
+data
+docs
+design
+tasks
+_refs

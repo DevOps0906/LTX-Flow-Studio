@@ -1,0 +1,15 @@
+flowchart TD
+  root["LTX-Flow-Studio (pnpm 모노레포)"]
+  web["apps/web — Next.js 웹"]
+  api["apps/api — FastAPI·워커"]
+  docs["docs — 기획·설계 문서"]
+  dia["docs/diagrams — Mermaid"]
+  tasks["tasks — 작업 기록"]
+  models["models/ (git 제외)"]
+  outs["outputs/ (git 제외)"]
+  root --> web
+  root --> api
+  root --> docs --> dia
+  root --> tasks
+  root -.-> models
+  root -.-> outs

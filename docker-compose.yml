@@ -1,0 +1,30 @@
+# 로컬 확인용. 호스트에는 127.0.0.1로만 공개한다(AGENTS.md 절대 규칙).
+# 실행: docker compose up --build   →   http://127.0.0.1:3000
+services:
+  api:
+    build:
+      context: apps/api
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - api-data:/data
+      - api-outputs:/outputs
+    environment:
+      LTX_API_STAGE1_BACKEND: stub
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://127.0.0.1:8000
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  api-data:
+  api-outputs:

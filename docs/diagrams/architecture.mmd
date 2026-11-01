@@ -1,0 +1,25 @@
+flowchart LR
+  user["브라우저"]
+  subgraph webg["apps/web (Next.js, 127.0.0.1:3000)"]
+    web["웹 화면"]
+  end
+  subgraph apig["apps/api (FastAPI, 127.0.0.1:8000)"]
+    routes["routes.py API"]
+    queue["잡 큐 (FIFO, 동시 1잡)"]
+    worker["단일 GPU 워커 (worker.py)"]
+    ltx["스테이지 1: LTX (diffusers, ltx.py)"]
+    ff["ffmpeg 세그먼트 연결"]
+    comfy["스테이지 2(선택): ComfyUI 어댑터 (comfy.py)"]
+  end
+  subgraph store["로컬 저장"]
+    out["outputs/&lt;job_id&gt;/"]
+    db["SQLite jobs (data/app.db)"]
+  end
+  ext["ComfyUI (COMFYUI_URL, 예: 127.0.0.1:8188 추정)"]
+  user --> web --> routes
+  routes --> db
+  routes --> queue --> worker
+  worker --> ltx --> ff --> out
+  worker -.-> comfy -.-> ext
+  comfy -.-> out
+  worker --> db
