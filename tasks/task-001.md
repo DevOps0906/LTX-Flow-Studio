@@ -17,4 +17,4 @@
 - S-01·S-02 화면 구현(task-008·009), 인증·랜딩
 
 ## 완료 조건
-- [ ] `pnpm lint` · `pnpm typecheck` 통과, `pnpm dev`에서 `/` → `/dashboard` 이동 확인
+- [x] `pnpm lint` · `pnpm typecheck` 통과, `/` → `/dashboard` 이동 확인(2026-11-01, docker·dev 모두, GNB 셸 편입 Q20)

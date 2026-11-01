@@ -21,7 +21,7 @@
 
   /* 서체 */
   --font-sans: "Pretendard", "Noto Sans KR", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", "D2Coding", ui-monospace, monospace; /* [v2 신규] 숫자·시간코드·% */
+  --font-mono: ui-monospace, "Cascadia Mono", Consolas, "D2Coding", monospace; /* [v2 신규] 숫자·시간코드·% */
 
   /* 글자 크기 — 모바일 기준(~767). 값은 정답 소스와 동일(확정 전) */
   --text-display: 24px;
