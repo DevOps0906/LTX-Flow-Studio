@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 
 from app import gpu
 from app.config import Settings
+from app.guards import host_allowed
 from app.main import create_app
 
 PAYLOAD = {"prompt": "Hyper-realistic product shot"}
@@ -18,8 +19,11 @@ def read_events(client: TestClient, job_id: str) -> list[dict]:
     with client.stream("GET", f"/api/jobs/{job_id}/events") as response:
         assert response.status_code == 200
         assert response.headers["content-type"].startswith("text/event-stream")
+        event_name = ""
         for line in response.iter_lines():
-            if line.startswith("data: "):
+            if line.startswith("event: "):
+                event_name = line.removeprefix("event: ")
+            elif event_name == "progress" and line.startswith("data: "):
                 events.append(json.loads(line.removeprefix("data: ")))
     return events
 
@@ -55,17 +59,21 @@ def test_job_lifecycle_sse_and_file(client: TestClient) -> None:
     assert file_response.content
 
     listed = client.get("/api/jobs").json()
-    assert [item["id"] for item in listed] == [job["id"]]
+    assert [item["id"] for item in listed["items"]] == [job["id"]]
 
 
 def test_file_404_for_unknown_job(client: TestClient) -> None:
-    assert client.get(f"/api/files/{uuid.uuid4().hex}.mp4").status_code == 404
+    file_response = client.get(f"/api/files/{uuid.uuid4().hex}.mp4")
+    assert file_response.status_code == 404
+    assert file_response.json()["error"]["code"] == "not_found"
     assert client.get(f"/api/jobs/{uuid.uuid4().hex}").status_code == 404
     assert client.get(f"/api/jobs/{uuid.uuid4().hex}/events").status_code == 404
 
 
 def test_file_404_when_job_failed(make_settings: Callable[..., Settings]) -> None:
-    with TestClient(create_app(make_settings(stage1_backend="ltx"))) as client:
+    with TestClient(
+        create_app(make_settings(stage1_backend="ltx")), base_url="http://localhost"
+    ) as client:
         job = client.post("/api/jobs", json=PAYLOAD).json()
         events = read_events(client, job["id"])
         assert events[-1]["status"] == "failed"
@@ -85,8 +93,10 @@ def test_file_404_when_job_failed(make_settings: Callable[..., Settings]) -> Non
 )
 def test_file_path_traversal_rejected(client: TestClient, path: str) -> None:
     response = client.get(path)
-    assert response.status_code in {404, 422}
+    assert response.status_code in {400, 404, 422}
     assert "video/mp4" not in response.headers.get("content-type", "")
+    if response.status_code == 400:
+        assert response.json()["error"]["code"] == "invalid_request"
 
 
 @pytest.mark.parametrize(
@@ -103,12 +113,15 @@ def test_file_path_traversal_rejected(client: TestClient, path: str) -> None:
     ],
 )
 def test_create_job_validation(client: TestClient, override: dict) -> None:
-    assert client.post("/api/jobs", json={**PAYLOAD, **override}).status_code == 422
+    response = client.post("/api/jobs", json={**PAYLOAD, **override})
+    assert response.status_code == 400
+    assert response.json()["error"]["code"] == "invalid_request"
 
 
 def test_stage2_rejected_when_comfy_not_configured(client: TestClient) -> None:
     response = client.post("/api/jobs", json={**PAYLOAD, "stages": [1, 2]})
-    assert response.status_code == 400
+    assert response.status_code == 409
+    assert response.json()["error"]["code"] == "stage2_unavailable"
 
 
 def test_gpu_not_ready_without_nvidia_smi(
@@ -120,6 +133,9 @@ def test_gpu_not_ready_without_nvidia_smi(
         "name": None,
         "vram_total_mb": None,
         "vram_used_mb": None,
+        "busy": False,
+        "queue_length": 0,
+        "stage2_available": False,
     }
 
 
@@ -135,6 +151,9 @@ def test_gpu_parses_nvidia_smi(client: TestClient, monkeypatch: pytest.MonkeyPat
         "name": "NVIDIA GeForce RTX 3060",
         "vram_total_mb": 12288,
         "vram_used_mb": 512,
+        "busy": False,
+        "queue_length": 0,
+        "stage2_available": False,
     }
 
 
@@ -146,3 +165,29 @@ def test_cors_allows_only_localhost_3000(client: TestClient) -> None:
     assert allowed.headers.get("access-control-allow-origin") == "http://localhost:3000"
     denied = client.options("/api/jobs", headers={**headers, "Origin": "http://evil.example"})
     assert "access-control-allow-origin" not in denied.headers
+
+
+def test_local_guard_rejects_non_local_host(client: TestClient) -> None:
+    response = client.get("/api/gpu", headers={"Host": "localhost.evil.example"})
+    assert response.status_code == 400
+    assert response.json() == {
+        "error": {"code": "host_not_allowed", "message": "허용되지 않은 Host입니다"}
+    }
+
+
+def test_local_guard_rejects_external_origin_on_post(client: TestClient) -> None:
+    response = client.post(
+        "/api/jobs", json=PAYLOAD, headers={"Origin": "http://evil.example"}
+    )
+    assert response.status_code == 403
+    assert response.json() == {
+        "error": {"code": "origin_not_allowed", "message": "허용되지 않은 출처입니다"}
+    }
+
+
+@pytest.mark.parametrize(
+    "host",
+    ["localhost.", "evil.localhost", "localhost:0", "localhost:65536", f"localhost:{'9' * 5000}"],
+)
+def test_host_allowed_rejects_noncanonical_hosts(host: str) -> None:
+    assert not host_allowed(host)

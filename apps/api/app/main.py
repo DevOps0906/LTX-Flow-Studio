@@ -7,6 +7,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import Settings
 from app.db import JobStore
+from app.errors import install_error_handlers
+from app.guards import LocalGuardMiddleware
 from app.progress import ProgressHub
 from app.routes import router
 from app.stages import ComfyHiresStage, LtxDistilledStage, Stage, StubStage
@@ -56,6 +58,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             store.close()
 
     app = FastAPI(title="LTX Nomad Studio API", lifespan=lifespan)
+    install_error_handlers(app)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,
@@ -63,6 +66,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         allow_headers=["Content-Type"],
         allow_credentials=False,
     )
+    app.add_middleware(LocalGuardMiddleware, allowed_origins=settings.cors_origins)
     app.include_router(router)
     return app
 

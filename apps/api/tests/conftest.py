@@ -25,5 +25,5 @@ def make_settings(tmp_path: Path) -> Callable[..., Settings]:
 
 @pytest.fixture
 def client(make_settings: Callable[..., Settings]) -> Iterator[TestClient]:
-    with TestClient(create_app(make_settings())) as test_client:
+    with TestClient(create_app(make_settings()), base_url="http://localhost") as test_client:
         yield test_client

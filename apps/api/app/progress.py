@@ -12,6 +12,7 @@ class ProgressEvent:
     status: str
     progress: int
     message: str
+    stage: int | None = None
 
     def to_dict(self) -> dict[str, object]:
         return asdict(self)

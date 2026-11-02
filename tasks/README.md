@@ -6,8 +6,8 @@
 |---|---|---|---|---|---|---|---|
 | task-001 | 프로젝트 생성 · 토큰 · GNB 셸 | W1 | 1 | — | 낮음 | builder (+designer) | 완료 |
 | task-002 | 보안 기본 설정(`/secure setup`) | W1 | 1 | 001 | 높음 | builder | 완료 |
-| task-003 | API 골격 · 로컬 가드 · GET /api/gpu | W1 | 1 | 002 | 높음 | builder | 진행 |
-| task-004 | 스테이지 1 실측 스파이크(3060) | W2 | 1 | 003 | 높음 | builder | 대기 |
+| task-003 | API 골격 · 로컬 가드 · GET /api/gpu | W1 | 1 | 002 | 높음 | builder | 완료 |
+| task-004 | 스테이지 1 실측 스파이크(3060) | W2 | 1 | 003 | 높음 | builder | 진행 |
 | task-005 | 잡 API · 큐 (A-01·02·03·05) | W2 | 1 | 003 | 높음 | builder | 대기 |
 | task-006 | 스테이지 1 구현(세그먼트·ffmpeg) | W2 | 1 | 004·005 | 높음 | builder | 대기 |
 | task-007 | SSE 진행률 (A-04) | W2 | 1 | 005 | 보통 | builder | 대기 |

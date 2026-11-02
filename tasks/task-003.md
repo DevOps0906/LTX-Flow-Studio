@@ -16,4 +16,5 @@
 - 모델 로드·추론, 잡 엔드포인트(task-005)
 
 ## 완료 조건
-- [ ] `uv run pytest -q`: 가드(잘못된 Host 400, 외부 Origin POST 거부), A-06 스키마 테스트 통과
+- [x] `uv run pytest -q`: 28개 통과. 잘못된 Host 400·외부 Origin POST 403·A-06 스키마 확인
+- [x] `uv run ruff check .` 통과
