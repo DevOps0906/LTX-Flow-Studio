@@ -12,13 +12,13 @@
 | A-05 | `GET /api/files/{id}.mp4` | path `id`(UUID만) | 200 `video/mp4`, Range 지원, `?download=1`이면 `Content-Disposition: attachment` | 404(없음·미완료) |
 | A-06 | `GET /api/gpu` | — | 200 GpuStatus(`#2`) | 503 GPU 미검출 |
 | A-07 | `POST /api/sources/validate` | `{url}` | 200 `{video_id, canonical_url}` — 네트워크 접속 없이 형식만 검사 | 400 `invalid_url` · 400 `host_not_allowed` · 400 `unsupported_url`(재생목록·라이브 등) |
-| A-08 | `POST /api/analyses` | AnalysisCreate(`#2`) | 201 Analysis. 서버가 A-07 검사를 다시 한다 | A-07 오류 · 409 `claude_key_missing` · 429 `queue_full`(생성 잡과 공유 큐, Q15 확정) |
+| A-08 | `POST /api/analyses` | AnalysisCreate(`#2`) | 201 Analysis. 서버가 A-07 검사와 다운로드 동의 상태를 다시 확인 | A-07 오류 · 409 `claude_key_missing`·`download_consent_required` · 429 `queue_full`(생성 잡과 공유 큐, Q15 확정) |
 | A-09 | `GET /api/analyses/{id}` | path `id`(UUID) | 200 Analysis | 404 |
 | A-10 | `GET /api/analyses/{id}/events` (SSE) | path `id` | 이벤트 `#3` 분석 표. 연결 시 현재 상태 1회 | 404 |
-| A-11 | `GET /api/analyses/{id}/source.mp4` | path `id`(UUID만) | 200 `video/mp4`, Range 지원. **다운로드 헤더 없음**(재배포 방지) — 존치는 Q13 | 404(없음·삭제됨) |
-| A-12 | `GET /api/analyses/{id}/frames/{n}.jpg` | `id` UUID · `n` 정수만 | 200 `image/jpeg`(대표 프레임) | 404 |
+| A-11 | `GET /api/analyses/{id}/source.mp4` | path `id`(UUID만) | 200 `video/mp4`, Range 지원. **다운로드 헤더 없음**(재배포 방지), 성공 완료 후 24시간까지만 제공 | 404(없음·만료·삭제됨) |
+| A-12 | `GET /api/analyses/{id}/frames/{n}.jpg` | `id` UUID · `n` 정수만 | 200 `image/jpeg`(대표 프레임, 원본과 같은 만료 시각) | 404(없음·만료·삭제됨) |
 | A-13 | `GET /api/settings` | — | 200 Settings(`#2`). 키 원문은 절대 포함하지 않음 | — |
-| A-14 | `PUT /api/settings` | `{analysis_mode_default}` | 200 Settings | 400 |
+| A-14 | `PUT /api/settings` | 2-1: `benchmark_download_enabled`; 2-2에서 `analysis_mode_default`·`i2v_enabled` 확장 | 200 Settings. 기능 활성화 요청 시 서버가 현재 고지 버전·수락 시각을 기록 | 400 |
 | A-15 | `PUT /api/settings/claude-key` | `{api_key}`(쓰기 전용) | 204. 저장 후 원문 폐기(메모리·응답·로그) | 400 `invalid_key_format`(규칙 확인 필요) · 500 `key_store_failed` |
 | A-16 | `DELETE /api/settings/claude-key` | — | 204 | — |
 - 오류 본문 공통: `{ "error": { "code": "<snake_case>", "message": "<한국어>" } }`.
@@ -26,11 +26,11 @@
 ## 2. 스키마 (Pydantic v2 · 웹 소비 타입과 같은 작업에서 맞춘다)
 | 객체 | 필드 |
 |---|---|
-| JobCreate | `prompt`(필수, 최대 2000자) · `negative_prompt?` · `duration`: 15\|20\|30(기본 15) · `aspect`: `"9:16"`\|`"16:9"` · `stages`: `[1]`\|`[1,2]`(기본 `[1]`) · `engine`: `"distilled"`\|`"dev"`(기본 `"distilled"`, 차이는 `05_STAGES.md#2`) · 벤치마킹: `analysis_id?`(UUID, `done`이어야 함) · `make_mode`: `"t2v"`\|`"i2v"`(기본 `"t2v"`, `i2v`는 `analysis_id` 필수) · `keyframe_ids?`: 정수 배열(`i2v`만, 세그먼트마다 1개 — Q18 확정) |
-| JobCreate 오류(추가) | 409 `analysis_not_done` · 400 `keyframe_not_found` · 409 `i2v_unavailable`(I2V 미지원 확인 시) |
+| JobCreate | `prompt`(필수, 최대 2000자) · `negative_prompt?` · `duration`: 15\|20\|30(기본 15) · `aspect`: `"9:16"`\|`"16:9"` · `stages`: `[1]`\|`[1,2]`(기본 `[1]`) · `engine`: `"distilled"`\|`"dev"`(기본 `"distilled"`, 차이는 `05_STAGES.md#2`) · 벤치마킹: `analysis_id?`(UUID, `done`이며 미만료) · `make_mode`: `"t2v"`\|`"i2v"`(기본 `"t2v"`, `i2v`는 `analysis_id` 필수) · `keyframe_ids?`: 정수 배열(`i2v`만, 세그먼트마다 1개 — Q18 확정) |
+| JobCreate 오류(추가) | 409 `analysis_not_done`·`analysis_expired`·`i2v_disabled`·`i2v_unavailable`(I2V 미지원 확인 시) · 400 `keyframe_not_found` |
 | AnalysisCreate | `url`(필수, 길이 상한 Q16) · `analysis_mode`: `"local"`\|`"claude"`(생략 시 Settings 기본값) |
-| Analysis | `id`(UUID) · `video_id` · `analysis_mode` · `status`: `queued`·`running`·`done`·`failed` · `step`: `download`·`scenes`·`transcript`·`describe`·`draft`\|null · `step_index`/`steps_total` · `progress`(0~100) · `message` · `scenes`: `[{index, start_s, end_s, frame_url, caption}]` · `transcript_source`: `"subtitle"`\|`"whisper"`\|null · `prompt_draft` · `negative_prompt_draft?` · `source_url?`(A-11) · `error_code?` · `created_at`·`finished_at?` (재시작 시 `running` → `failed(interrupted)`) |
-| Settings | `analysis_mode_default`: `"local"`\|`"claude"`(기본 `"local"`, ADR-003) · `claude_key_set`(bool) · `claude_key_hint`(끝 4자만, 미설정 null) |
+| Analysis | `id`(UUID) · `video_id` · `analysis_mode` · `status`: `queued`·`running`·`done`·`failed` · `step`: `download`·`scenes`·`transcript`·`describe`·`draft`\|null · `step_index`/`steps_total` · `progress`(0~100) · `message` · `scenes`: `[{index, start_s, end_s, frame_url, caption}]` · `transcript_source`: `"subtitle"`\|`"whisper"`\|null · `prompt_draft` · `negative_prompt_draft?` · `source_url?`(A-11) · `source_expires_at?`(성공 완료 시각+24시간) · `error_code?` · `created_at`·`finished_at?` (재시작 시 `running` → `failed(interrupted)`) |
+| Settings | 2-1: `benchmark_download_enabled`(기본 false)·`benchmark_download_consent_version?`(문자열)·`benchmark_download_consent_at?`(ISO 시각). 2-2 확장: `analysis_mode_default`: `"local"`\|`"claude"`(기본 `"local"`) · `i2v_enabled`(기본 false)·`i2v_consent_version?`(문자열)·`i2v_consent_at?`(ISO 시각) · `claude_key_set`(bool)·`claude_key_hint`(끝 4자만, 미설정 null). 동의 값은 서버 관리·SQLite 저장 |
 | 분석 상한 | 원본 길이·파일 크기·장면 수·Claude 전송 프레임 수·URL 길이 **미정(Q16)** — 수치 넣지 않음 |
 | 상한 | 프롬프트 2000자 · 대기 큐 5개(`queued` 기준, 실행 중 1건 포함 여부 확인 필요) · 목록 `limit` 기본·최대 50 (사용자 결정 2026-11-01) |
 | Job | JobCreate 필드(벤치마킹 필드 포함) + `id`(UUID) · `status`(아래) · `progress`(0~100) · `stage`(1\|2\|null) · `segment`/`segments_total` · `message` · `width`·`height`(최종 해상도) · `error_code?` · `created_at`·`finished_at?` · `video_url?`(`/api/files/{id}.mp4`) |
@@ -45,7 +45,7 @@
 | `progress` | `{stage, segment, segments_total, progress, message}` | 세그먼트·스텝 단위. 전송 주기 미확인 |
 | `done` | `{video_url, width, height}` | 이후 서버가 스트림 종료 |
 | `error` | `{error_code, message}` | `failed` 전이, 스트림 종료 |
-- 오류 코드 후보: `oom` · `stage2_failed` · `ffmpeg_failed` · `interrupted` · `model_missing` (확정은 task-006). `make_mode=i2v` 추가 후보: `keyframe_missing`(파일 삭제됨, Q13) · `i2v_failed` (확정 task-021).
+- 오류 코드 후보: `oom` · `stage2_failed` · `ffmpeg_failed` · `interrupted` · `model_missing` (확정은 task-006). `make_mode=i2v` 추가 후보: `keyframe_missing`(파일 누락) · `i2v_failed` (확정 task-021).
 
 분석 잡 이벤트 (A-10) — 같은 4종, data만 다르다
 | event | data | 비고 |
@@ -54,7 +54,7 @@
 | `progress` | `{step, step_index, steps_total, progress, message}` | 단계 표시(GSAP)의 입력. 주기 미확인 |
 | `done` | `{analysis_id}` | 웹은 A-09로 결과 조회 |
 | `error` | `{error_code, message}` | `failed` 전이 |
-- 분석 오류 코드 후보(확정 task-016~020): `source_unavailable`(비공개·삭제·지역 제한 등) · `source_too_long`(Q16) · `download_failed` · `scene_detect_failed` · `transcript_failed` · `describe_failed` · `claude_auth_failed` · `claude_rate_limited` · `claude_failed` · `oom` · `interrupted`. `message`에 키·외부 응답 원문을 넣지 않는다.
+- 분석 오류 코드 후보(확정 task-016~020): `source_unavailable`(비공개·삭제·지역 제한 등) · `source_too_long`(Q16) · `download_failed` · `scene_detect_failed` · `transcript_failed` · `describe_failed` · `claude_auth_failed` · `claude_rate_limited` · `claude_failed` · `oom` · `interrupted`. `message`에 키·외부 응답 원문을 넣지 않는다. 다운로드 기능이 꺼져 있거나 동의 버전이 오래되면 `download_consent_required`. 실패 시 받은 원본·프레임을 즉시 삭제하고, 성공 시 `finished_at + 24h`에 접근 만료·자동 삭제한다. 만료 후 신규 생성 요청은 `analysis_expired`; 만료 전에 접수된 생성 작업이 사용하는 프레임은 작업 종료 직후 삭제한다.
 
 ## 4. 웹 쪽 사용처
 | API | 화면 |
@@ -90,7 +90,7 @@
 |---|---|
 | 노출 면 | 로컬 API A-07~A-16(`#5` 가드 동일 적용, `PUT`·`DELETE`도 Origin 검사). 외부 송신: YouTube(yt-dlp) · `api.anthropic.com`(claude 모드). 인터넷 수신 없음 |
 | 인증·인가 | 없음(단일 로컬 사용자). 키 설정·삭제는 Origin 가드 필수 — CSRF로 공격자 키를 심으면 원본 프레임이 공격자 계정으로 전송됨 |
-| 다루는 데이터 | 원본 임시 사본·장면 이미지·자막(저작물) · Claude API 키 · 프롬프트 초안. 저작권·약관 방침은 `01_PRD.md#6` 표(Q11·Q12 확정, Q13 미결, 약관 충돌 여부 **확인 필요**) |
+| 다루는 데이터 | 원본 임시 사본·장면 이미지·자막(저작물, Q13의 24시간 보관) · Claude API 키 · 프롬프트 초안. 저작권·약관 방침은 `01_PRD.md#6` 표(Q11~Q13 결정, 약관 충돌 여부 **확인 필요**) |
 | 키·권한 | `ANTHROPIC_API_KEY`: 서버 전용 저장(Windows 자격 증명 관리자 — Q14 확정, SQLite·`outputs/`·`data/sources/` 금지) · A-13은 `claude_key_set`·끝 4자 마스킹만 · 원문을 브라우저로 다시 보내지 않음 · Claude 호출은 서버에서만 |
 | 입력: URL | 표준 파서로 분해 → 스킴 `https`만(`http` 허용 여부 팀장 결정 필요) → 호스트 정확 일치 허용 목록 `youtube.com`·`www.youtube.com`·`m.youtube.com`·`youtu.be`(서브도메인 와일드카드·IP·포트·userinfo 거부) → 경로 `/watch?v=`·`/shorts/<id>`·`youtu.be/<id>`만 → 영상 ID 정규식(형식 확인 필요) → 서버가 `https://www.youtube.com/watch?v=<id>` **재구성**. 원 문자열은 다음 단계로 넘기지 않는다 |
 | 입력: 명령 | yt-dlp·ffmpeg는 인자 **배열**로 실행(셸 금지), 인자 고정: 설정 파일 무시·재생목록 금지·출력 템플릿 고정(`data/sources/<analysis_id>/`)·크기 상한(Q16)·`--` 뒤에 정규 URL 하나. 사용자 입력으로 옵션·포맷·경로를 받지 않는다. 옵션명은 설치 버전 문서로 **확인 필요**(task-016) |
