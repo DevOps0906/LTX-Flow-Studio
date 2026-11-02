@@ -1,15 +1,16 @@
-# task-019 설정 · Claude API 키 저장 (A-13~A-16)
+# task-019 설정 확장 · Claude API 키 저장 (A-13~A-16)
 
 | 항목 | 내용 |
 |---|---|
-| 웨이브 | W5 · 선행 task-003 · 위험도 높음 · 보안 영향 키 권한(사용자 비밀 저장) |
+| 웨이브 | W5 · 선행 task-003·016 · 위험도 높음 · 보안 영향 키 권한(사용자 비밀 저장) |
 | 담당 | builder → challenger(착수 전) → codex-reviewer(code) + reviewer(security) |
 | 근거 | `docs/04_API.md#1` A-13~A-16·`#2` Settings·`#6` 키 행, `docs/01_PRD.md#8` |
 | 쓰기 허용 | `apps/api/**`, `.env.example`(이름만) |
 
 ## 할 것
+- task-016에서 만든 설정(A-13/A-14, 다운로드 동의·기능 플래그)을 유지하면서 분석 기본값·I2V 동의 상태를 확장
 - 키 저장소 어댑터(Windows 자격 증명 관리자, Q14 확정 — 접근 라이브러리는 새 의존성이라 `security-baseline` 검토·승인 후), A-15 쓰기 전용·A-16 삭제, A-13은 `claude_key_set`·끝 4자만
-- `settings` 테이블은 `analysis_mode_default`만(키 금지)
+- `settings` 테이블에는 기본값·동의 버전/시각·기능 플래그만 저장; Claude API 키는 저장 금지
 - 로그·오류 메시지·예외 문자열에서 키 제거(마스킹 필터)
 
 ## 하지 않을 것

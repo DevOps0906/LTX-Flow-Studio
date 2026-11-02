@@ -9,8 +9,9 @@
 
 ## 할 것
 - pnpm 워크스페이스 + `apps/web`(Next.js 16 · React 19 · TS · Tailwind CSS v4, 최신 stable 확인 후 버전 고정)
-- `apps/web/src/styles/tokens.css`: 원본 §4.1 색 5개 + 3구간 폰트 크기 토큰
-- `/` → `/dashboard` 리다이렉트, 빈 `/dashboard` 페이지
+- `apps/web/src/styles/tokens.css`: 채택한 v2 토큰과 3구간 폰트 크기 적용
+- `/` → `/dashboard` 리다이렉트, S-01·S-02 구현을 위한 경로 기반 페이지 골격
+- 앱 셸·반응형 GNB와 `/benchmark`·`/gallery`·`/settings` 라우트 자리표시 화면 구현(현재 커밋에 선구현됨)
 - `/api/*` → `127.0.0.1:8000` 연결 방식은 PRD Q4 결정대로(미결이면 rewrites 제안안)
 
 ## 하지 않을 것

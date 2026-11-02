@@ -10,7 +10,7 @@
 | 스테이지 1 | `apps/api` 내부 | diffusers LTX-Video distilled(기본) / dev (FP8 / CPU offload) | ~5초 세그먼트 생성 → 이어붙여 720p MP4 | 1080p 생성 |
 | 스테이지 2(선택) | 외부: 기존 설치 ComfyUI | REST/WS (`COMFYUI_URL`) | 720p → 1080p 고해상도 | 설치·관리(사용자 몫) |
 | 후처리 | PATH의 ffmpeg | 외부 프로세스 | 세그먼트 연결·인코딩 | 번들 배포 |
-| 저장 | 로컬 디스크 + SQLite | `outputs/<job_id>/`, `data/app.db`(경로 제안) | 잡 기록·결과 파일 | 클라우드 저장 |
+| 저장 | 로컬 디스크 + SQLite | `outputs/<job_id>/`, `data/sources/<analysis_id>/`, `data/app.db` | 잡 기록·결과·분석 자산 및 동의 설정. 만료는 API 접근에서 즉시 적용하고, 실행 중 주기 정리·시작 시 정리로 파일을 삭제. 원본·프레임은 성공 완료 후 24시간, 임시 자막·전사는 분석 종료 직후, 실패 시 모든 임시 자산 즉시 삭제. 기한 전 접수된 생성 작업이 참조 중인 프레임은 작업 종료 직후 삭제 | 클라우드 저장 |
 | 모델 | `models/` | 가중치(로컬, git 제외) | — | 자동 커밋 |
 | 웹 진행 애니메이션 | `apps/web` | GSAP(버전·라이선스 **확인 필요**, task-023) | 프로그레스·단계 표시 트윈, reduced-motion 대체 | 상태 판단(값은 SSE만) |
 
@@ -32,7 +32,7 @@
 | 웹 → API | Next.js rewrites로 `/api/*` → `127.0.0.1:8000` 프록시(제안, 같은 출처·CORS 불필요). SSE 버퍼링 여부 확인 필요. **미결**(`01_PRD.md#7` Q4) |
 | API → GPU | 프로세스 1개가 GPU 점유, **동시 실행 1잡**, 나머지는 FIFO 대기(`queued`) |
 | API → ComfyUI | `Stage` 인터페이스 뒤의 어댑터 1개. 미설정·미응답이면 스테이지 2 비활성(`GET /api/gpu`의 `stage2_available=false`) |
-| 파일 | `job_id`(서버 발급 UUID) → `outputs/<job_id>/final.mp4` 고정 매핑. 경로 입력 받지 않음. 분석물은 `analysis_id`(UUID) → `data/sources/<analysis_id>/{source.mp4, frames/NNN.jpg}` 고정 매핑(경로 제안) |
+| 파일 | `job_id`(서버 발급 UUID) → `outputs/<job_id>/final.mp4` 고정 매핑. 분석물은 `analysis_id`(UUID) → `data/sources/<analysis_id>/{source.mp4, frames/NNN.jpg}` 고정 매핑. 경로 입력은 받지 않으며 원본 만료·프레임 참조 규칙은 위 저장 행과 `04_API.md#2`에 따른다 |
 | 외부 송신 | 허용 목록만: YouTube(yt-dlp가 접속, 대상은 정규 URL 하나) · `api.anthropic.com`(`analysis_mode=claude`만). 그 외 아웃바운드 없음 |
 | GPU 공유 | 분석(Whisper·로컬 비전모델)과 LTX는 **순차 사용** — 같은 GPU 잠금, 단계 전후 모델 해제. 같은 GPU FIFO·큐 5개 공유(Q15 확정) |
 
@@ -50,7 +50,7 @@
 분석 잡: `queued → running(step: download→scenes→transcript→describe→draft) → done`, 어디서든 `failed`. 재시작 규칙은 생성 잡과 같다(정본 `04_API.md#2` Analysis).
 
 ## 5. 데이터 모델
-SQLite `jobs`(필드 = `04_API.md#2` Job) · `analyses`(필드 = `04_API.md#2` Analysis) · `settings`(`analysis_mode_default`만, **API 키 저장 금지**) 3개. 별도 데이터 모델 문서는 미작성 — 문서 번호 충돌 메모는 `05_STAGES.md` 머리말. ERD 필요 시 `sql2erd`(마이그레이션 작성 후).
+SQLite `jobs`(필드 = `04_API.md#2` Job) · `analyses`(필드 = `04_API.md#2` Analysis) · `settings`(분석 기본값·버전이 있는 동의·기능 플래그, **API 키 저장 금지**) 3개. Claude 키는 Windows 자격 증명 관리자에 둔다. 데이터 필드 정본은 `04_API.md#2`.
 
 ## 6. 품질 속성
 | 속성 | 방침 |
