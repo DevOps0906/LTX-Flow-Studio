@@ -14,7 +14,10 @@ id_ed25519*
 # 모델/출력
 models/
 outputs/
+apps/api/data/
 *.db
+*.db-*
+*.log
 __pycache__/
 .venv/
 *.tsbuildinfo

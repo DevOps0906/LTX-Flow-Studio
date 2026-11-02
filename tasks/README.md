@@ -5,8 +5,8 @@
 | 번호 | 제목 | 웨이브 | 릴리스 | 선행 | 위험도 | 담당 | 상태 |
 |---|---|---|---|---|---|---|---|
 | task-001 | 프로젝트 생성 · 토큰 · GNB 셸 | W1 | 1 | — | 낮음 | builder (+designer) | 완료 |
-| task-002 | 보안 기본 설정(`/secure setup`) | W1 | 1 | 001 | 높음 | builder | 대기 |
-| task-003 | API 골격 · 로컬 가드 · GET /api/gpu | W1 | 1 | 002 | 높음 | builder | 대기 |
+| task-002 | 보안 기본 설정(`/secure setup`) | W1 | 1 | 001 | 높음 | builder | 완료 |
+| task-003 | API 골격 · 로컬 가드 · GET /api/gpu | W1 | 1 | 002 | 높음 | builder | 진행 |
 | task-004 | 스테이지 1 실측 스파이크(3060) | W2 | 1 | 003 | 높음 | builder | 대기 |
 | task-005 | 잡 API · 큐 (A-01·02·03·05) | W2 | 1 | 003 | 높음 | builder | 대기 |
 | task-006 | 스테이지 1 구현(세그먼트·ffmpeg) | W2 | 1 | 004·005 | 높음 | builder | 대기 |
@@ -37,6 +37,10 @@
 ## 발견한 문제 (범위 밖 — 나중 작업 후보)
 | 날짜 | 위치 | 내용 | 제안 |
 |---|---|---|---|
+| 2026-11-02 | `docs/01_PRD.md#8`·`04_API.md#5`·`05_STAGES.md#3`·ADR-002·task-010·011 | 환경변수 이름이 `COMFYUI_URL`로 적혀 있으나 코드는 `LTX_API_` 접두사(`config.py`, `extra="ignore"`라 틀린 이름은 조용히 무시돼 2단계가 꺼짐) | task-010 착수 전 문서를 `LTX_API_COMFYUI_URL`·`LTX_API_COMFYUI_PATH`로 맞춤 |
+| 2026-11-02 | `secscan all` | 라이선스 정보 없음 492건(pnpm·uv lockfile에 라이선스 없음) → GPL·AGPL 판정 불가 | syft 설치(새 도구, 사용자 승인) 후 `secscan license` 재실행 |
+| 2026-11-02 | minimatch@10.2.6·3.1.5 | CVE-2026-118764 MODERATE, 수정 11.0.1 | Dependabot PR 또는 다음 의존성 갱신 때 반영 |
+| 2026-11-02 | `.gitignore` `models/`·`outputs/` | 앵커가 없어 나중에 `apps/api/app/models/` 같은 소스 폴더를 만들면 조용히 무시됨 | 소스 패키지 이름을 피하거나 그때 앵커(`/models/`)로 교체 |
 
 ## 교훈 (다음 작업에 그대로 적용할 것만, 20줄 이내 유지)
 - 
