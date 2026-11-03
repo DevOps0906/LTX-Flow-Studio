@@ -1,5 +1,5 @@
 # 웹(Next.js 16) — 디자인·UI 확인용 이미지
-FROM node:24-slim AS base
+FROM node:26-slim AS base
 ENV PNPM_HOME=/pnpm PATH=/pnpm:$PATH
 RUN corepack enable
 WORKDIR /repo
