@@ -1,5 +1,5 @@
 # 워커(FastAPI) — stub 단계 확인용 이미지(GPU·LTX 미포함)
-FROM python:3.11-slim
+FROM python:3.15-slim
 COPY --from=ghcr.io/astral-sh/uv:0.11.24 /uv /usr/local/bin/uv
 ENV UV_LINK_MODE=copy UV_COMPILE_BYTECODE=1 PYTHONUNBUFFERED=1
 WORKDIR /app
